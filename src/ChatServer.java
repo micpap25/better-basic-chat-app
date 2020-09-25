@@ -1,5 +1,3 @@
-package day5_bca;
-
 import java.net.Inet4Address;
 import java.net.ServerSocket;
 import java.net.Socket;
