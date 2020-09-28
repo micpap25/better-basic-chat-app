@@ -8,10 +8,17 @@ public class ChatClient {
     private static Socket socket;
     private static BufferedReader socketIn;
     private static PrintWriter out;
-    
+    public static final String NAME = "NAME";
+    public static final String CHAT = "CHAT";
+    public static final String PCHAT = "PCHAT";
+    public static final String QUIT = "QUIT";
+    public static final String MAKE_ROOM = "MAKE_ROOM";
+    public static final String JOIN_ROOM ="JOIN_ROOM";
+    public static final String LEAVE_ROOM ="LEAVE_ROOM";
+    public static final String LIST_ROOM="LIST_ROOM";
     public static void main(String[] args) throws Exception {
         Scanner userInput = new Scanner(System.in);
-        
+
         System.out.println("What's the server IP? ");
         String serverip = userInput.nextLine();
         System.out.println("What's the server port? ");
@@ -22,48 +29,56 @@ public class ChatClient {
         socketIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         out = new PrintWriter(socket.getOutputStream(), true);
 
+
+        System.out.print("Chat sessions has started - enter a user name: ");
+        do {
+            String name = userInput.nextLine().trim();
+            out.println(name); //out.flush();
+        }while(socketIn.readLine().equals("SUBMITNAME"));
         // start a thread to listen for server messages
-        ServerListener listener = new ServerListener();
+        ServerListener listener = new ServerListener(socketIn);
         Thread t = new Thread(listener);
         t.start();
 
-        System.out.print("Chat sessions has started - enter a user name: ");
-        String name = userInput.nextLine().trim();
-        out.println(name); //out.flush();
+
 
         String line = userInput.nextLine().trim();
-        while(!line.toLowerCase().startsWith("/quit")) {
-            String msg = String.format("CHAT %s", line); 
+        while (!line.toLowerCase().startsWith("/quit")) {
+            line = line.trim();
+            String prefix = parse(line);
+            String body = line.replaceAll(prefix,"");
+            String msg = String.format("%s %s",prefix, body);
             out.println(msg);
             line = userInput.nextLine().trim();
         }
-        out.println("QUIT");
+        out.println(QUIT);
         out.close();
         userInput.close();
         socketIn.close();
         socket.close();
-        
     }
-
-    static class ServerListener implements Runnable {
-
-        @Override
-        public void run() {
-            try {
-                String incoming = "";
-
-                while( (incoming = socketIn.readLine()) != null) {
-                    //handle different headers
-                    //WELCOME
-                    //CHAT
-                    //EXIT
-                    System.out.println(incoming);
-                }
-            } catch (Exception ex) {
-                System.out.println("Exception caught in listener - " + ex);
-            } finally{
-                System.out.println("Client Listener exiting");
-            }
+    public static String parse(String msg){
+        if(msg.charAt(0)=='@'){
+            return PCHAT;
         }
+        if(msg.startsWith("/list")){
+            return LIST_ROOM;
+        }
+        if(msg.startsWith("join")){
+            return JOIN_ROOM;
+        }
+        if (msg.startsWith("/leave")){
+            return LEAVE_ROOM;
+        }
+        if(msg.startsWith("/make")){
+            return MAKE_ROOM;
+        }
+        else{
+            return CHAT;
+        }
+
+
     }
 }
+
+

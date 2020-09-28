@@ -8,12 +8,22 @@ public class ClientConnectionData {
     private PrintWriter out;
     private String name;
     private String userName;
+    private String room;
+
 
     public ClientConnectionData(Socket socket, BufferedReader input, PrintWriter out, String name) {
         this.socket = socket;
         this.input = input;
         this.out = out;
         this.name = name;
+    }
+
+    public String getRoom() {
+        return room;
+    }
+
+    public void setRoom(String room) {
+        this.room = room;
     }
 
     public Socket getSocket() {
