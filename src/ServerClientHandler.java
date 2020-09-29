@@ -31,6 +31,28 @@ public class ServerClientHandler implements Runnable {
         }
     }
 
+    /**
+     * Broadcasts a message to all clients
+     * other than the message sender connected to the server.
+     */
+    public void broadcastExcludeSender(String msg) {
+        try {
+            System.out.println("Broadcasting -- " + msg);
+            synchronized (clientList) {
+                for (ClientConnectionData c : clientList){
+                    if (!c.getSocket().getInetAddress().equals(client.getSocket().getInetAddress()))
+                        c.getOut().println(msg);
+                }
+            }
+        } catch (Exception ex) {
+            System.out.println("broadcast caught exception: " + ex);
+            ex.printStackTrace();
+        }
+    }
+
+    /**
+     * Broadcasts a message to one other client connected to the server.
+     */
     public void whisper(String msg, ClientConnectionData usr) {
         try {
             System.out.println("Whispering -- " + msg);
