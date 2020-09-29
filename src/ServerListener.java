@@ -12,7 +12,7 @@ public class ServerListener implements Runnable {
         try {
             String incoming = "";
 
-            while( (incoming = socketIn.readLine()) != null) {
+            while((incoming = socketIn.readLine()) != null) {
                 //handle different headers
                 //WELCOME
                 //CHAT

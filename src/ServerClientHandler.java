@@ -29,7 +29,16 @@ public class ServerClientHandler implements Runnable {
             System.out.println("broadcast caught exception: " + ex);
             ex.printStackTrace();
         }
+    }
 
+    public void whisper(String msg, ClientConnectionData usr) {
+        try {
+            System.out.println("Whispering -- " + msg);
+            usr.getOut().println(msg);
+        } catch (Exception ex) {
+            System.out.println("whisper caught exception: " + ex);
+            ex.printStackTrace();
+        }
     }
 
     @Override
