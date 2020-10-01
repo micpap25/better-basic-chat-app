@@ -72,18 +72,25 @@ public class ServerClientHandler implements Runnable {
             BufferedReader in = client.getInput();
             //TODO: get userName, first message from user
 
-            client.notify();
             String userName = in.readLine().trim();
             boolean nameValidity = false;
+            boolean repeat = false;
 
-            while (!nameValidity) {
-                if (userName.contains(" ") || userName.equals("") || clientList.contains(client)) {
+            while (nameValidity != true) {
+                for (ClientConnectionData c : clientList) {
+                    if (c.getName().equals(userName)) {
+                        repeat = true;
+                    }
+                }
+                if (userName.contains(" ") || userName.equals("") || !repeat) {
                     in = client.getInput();
                     userName = in.readLine().trim();
+                    client.getOut().println("SUBMITNAME");
                 }
                 else {
                     client.setUserName(userName);
                     nameValidity = true;
+                    client.getOut().println("Thank you! " + userName);
                 }
             }
 
