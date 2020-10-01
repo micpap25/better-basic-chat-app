@@ -109,12 +109,13 @@ public class ServerClientHandler implements Runnable {
                     }
                 } else if (incoming.startsWith("PCHAT")) {
                     String chat = incoming.substring(5).trim();
-                    String name= chat.split(" ")[0];
-                    String content = chat.split(" ")[1];
+                    String name = chat.split(" ")[0];
+                    //TODO: If every single word gets cut off this is the problem
+                    String content = chat.substring(name.length()).trim();
                     if (content.length() > 0) {
                         String msg = String.format("PCHAT %s %s", client.getUserName(), content);
                         for (ClientConnectionData c : clientList){
-                            if (c.getName().equals(name)) {
+                            if (c.getUserName().equals(name)) {
                                 whisper(msg, c);
                                 break;
                             }
@@ -138,7 +139,7 @@ public class ServerClientHandler implements Runnable {
                 clientList.remove(client);
             }
             System.out.println(client.getName() + " has left.");
-            broadcast(String.format("EXIT %s", client.getUserName()));
+            broadcastExcludeSender(String.format("EXIT %s", client.getUserName()));
             try {
                 client.getSocket().close();
             } catch (IOException ignored) {}

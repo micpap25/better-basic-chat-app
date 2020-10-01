@@ -37,7 +37,7 @@ public class ChatClient {
             name = userInput.nextLine().trim();
             out.println(name); //out.flush();
         }
-        System.out.println("Thank you: "+name);
+        System.out.println("Thank you: " + name);
 
         // start a thread to listen for server messages
         ServerListener listener = new ServerListener(socketIn);
