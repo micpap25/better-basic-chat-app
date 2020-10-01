@@ -30,11 +30,11 @@ public class ChatClient {
         out = new PrintWriter(socket.getOutputStream(), true);
 
         String firstMsg="";
-        System.out.print("Chat sessions has started - enter a user name: ");
-        do {
+        while((firstMsg=socketIn.readLine()).equals("SUBMITNAME")){
+            System.out.print("Chat sessions has started - enter a user name: ");
             String name = userInput.nextLine().trim();
             out.println(name); //out.flush();
-        }while((firstMsg=socketIn.readLine()).equals("SUBMITNAME"));
+        }
         System.out.println(firstMsg);
         // start a thread to listen for server messages
         ServerListener listener = new ServerListener(socketIn);
