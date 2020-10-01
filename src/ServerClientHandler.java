@@ -22,7 +22,6 @@ public class ServerClientHandler implements Runnable {
             synchronized (clientList) {
                 for (ClientConnectionData c : clientList){
                     c.getOut().println(msg);
-                    // c.getOut().flush();
                 }
             }
         } catch (Exception ex) {
@@ -40,7 +39,7 @@ public class ServerClientHandler implements Runnable {
             System.out.println("Exclusively Broadcasting -- " + msg);
             synchronized (clientList) {
                 for (ClientConnectionData c : clientList){
-                    if (!c.getSocket().getInetAddress().equals(client.getSocket().getInetAddress()))
+                    if (!c.getUserName().equals(client.getUserName()))
                         c.getOut().println(msg);
                 }
             }

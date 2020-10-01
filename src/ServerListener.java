@@ -13,7 +13,7 @@ public class ServerListener implements Runnable {
             String incoming;
             while((incoming = socketIn.readLine()) != null) {
                 String msg = "";
-                System.out.println(incoming);
+                //System.out.println(incoming);
                 String[] info = incoming.split(" ");
                 switch (info[0]) {
                     case "WELCOME":
