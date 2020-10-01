@@ -6,7 +6,14 @@ public class ServerListener implements Runnable {
     public ServerListener(BufferedReader socketIn) {
         this.socketIn = socketIn;
     }
-
+    private String slice(String[] array,int start,int end,String insert){
+        StringBuilder message = new StringBuilder();
+        for (int i = start; i < end || i<array.length; i++) {
+            message.append(insert);
+            message.append(array[i]);
+        }
+        return message.toString().trim();
+    }
     @Override
     public void run() {
         try {
@@ -20,10 +27,10 @@ public class ServerListener implements Runnable {
                         msg = info[1] + " has joined";
                         break;
                     case "CHAT":
-                        msg = info[1] + ": " + info[2];
+                        msg = info[1] + ": " + slice(info,2,info.length," ");
                         break;
                     case "PCHAT":
-                        msg = info[1] + " (private): " + info[2];
+                        msg = info[1] + " (private): " + slice(info,2,info.length," ");
                         break;
                     case "EXIT":
                         msg = info[1] + " has left the server";
