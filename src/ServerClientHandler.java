@@ -55,8 +55,11 @@ public class ServerClientHandler implements Runnable {
      */
     public void whisper(String msg, ClientConnectionData usr) {
         try {
+            assert usr != null;
             System.out.println("Whispering -- " + msg);
             usr.getOut().println(msg);
+        } catch (AssertionError ex) {
+            System.out.println("That user does not exist.");
         } catch (Exception ex) {
             System.out.println("whisper caught exception: " + ex);
             ex.printStackTrace();
@@ -73,7 +76,7 @@ public class ServerClientHandler implements Runnable {
             String userName = in.readLine().trim();
             boolean nameValidity = false;
 
-            while (nameValidity != true) {
+            while (!nameValidity) {
                 if (userName.contains(" ") || userName.equals("") || clientList.contains(client)) {
                     in = client.getInput();
                     userName = in.readLine().trim();
@@ -83,9 +86,6 @@ public class ServerClientHandler implements Runnable {
                     nameValidity = true;
                 }
             }
-            
-
-
 
             //notify all that client has joined
             broadcast(String.format("WELCOME %s", client.getUserName()));
@@ -98,7 +98,21 @@ public class ServerClientHandler implements Runnable {
                     String chat = incoming.substring(4).trim();
                     if (chat.length() > 0) {
                         String msg = String.format("CHAT %s %s", client.getUserName(), chat);
-                        broadcast(msg);
+                        broadcastExcludeSender(msg);
+                    }
+                } else if (incoming.startsWith("PCHAT")) {
+                    String chat = incoming.substring(5).trim();
+                    String name= chat.split(" ")[0];
+                    String content = chat.split(" ")[1];
+                    ClientConnectionData usr = null;
+                    for (ClientConnectionData c : clientList){
+                        if (c.getName().equals(name)){
+                            usr = c;
+                        }
+                    }
+                    if (chat.length() > 0) {
+                        String msg = String.format("PCHAT %s %s", client.getUserName(), chat);
+                        whisper(msg, usr);
                     }
                 } else if (incoming.startsWith("QUIT")){
                     break;
