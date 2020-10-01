@@ -29,24 +29,26 @@ public class ChatClient {
         socket = new Socket(serverip, port);
         socketIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         out = new PrintWriter(socket.getOutputStream(), true);
-        String name ="";
-        String firstMsg="";
+        String name = "";
+
+        String firstMsg;
         while((firstMsg=socketIn.readLine()).equals("SUBMITNAME") || !firstMsg.equals("ACCEPT")){
             System.out.print("Chat sessions has started - enter a user name: ");
             name = userInput.nextLine().trim();
             out.println(name); //out.flush();
         }
         System.out.println("Thank you: "+name);
+
         // start a thread to listen for server messages
         ServerListener listener = new ServerListener(socketIn);
         Thread t = new Thread(listener);
         t.start();
 
-        String line = userInput.nextLine().trim();
+        String line = "";
         while (!line.toLowerCase().startsWith("/quit")) {
-            line = line.trim();
-            String msg = parse(line);
             line = userInput.nextLine().trim();
+            String msg = parse(line);
+            out.println(msg);
         }
         out.println(QUIT);
         out.close();

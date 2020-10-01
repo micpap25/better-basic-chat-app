@@ -10,29 +10,30 @@ public class ServerListener implements Runnable {
     @Override
     public void run() {
         try {
-            String incoming = "";
-
+            String incoming;
             while((incoming = socketIn.readLine()) != null) {
-                String Msg = "";
+                String msg = "";
                 System.out.println(incoming);
                 String[] info = incoming.split(" ");
-                if (info[0].equals("WELCOME")){
-                    Msg = info[1]+" has joined";
-                }
-                else if(info[0].equals("CHAT")){
-                    Msg = info[1]+": "+info[2];
-                }
-                else if(info[0].equals("PCHAT")){
-                    Msg = info[1]+" (private): "+info[2];
-                }
-                else if(info[0].equals("EXIT")){
-                    Msg = info[1]+" has left the server";
-                }
-                else if(info[0].equals("EXIT_ROOM")){
-                    Msg = info[1]+" has left the room";
+                switch (info[0]) {
+                    case "WELCOME":
+                        msg = info[1] + " has joined";
+                        break;
+                    case "CHAT":
+                        msg = info[1] + ": " + info[2];
+                        break;
+                    case "PCHAT":
+                        msg = info[1] + " (private): " + info[2];
+                        break;
+                    case "EXIT":
+                        msg = info[1] + " has left the server";
+                        break;
+                    case "EXIT_ROOM":
+                        msg = info[1] + " has left the room";
+                        break;
                 }
 
-                System.out.println(Msg);
+                System.out.println(msg);
             }
         } catch (Exception ex) {
             System.out.println("Exception caught in listener - " + ex);

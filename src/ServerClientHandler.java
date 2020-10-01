@@ -37,7 +37,7 @@ public class ServerClientHandler implements Runnable {
      */
     public void broadcastExcludeSender(String msg) {
         try {
-            System.out.println("Broadcasting -- " + msg);
+            System.out.println("Exclusively Broadcasting -- " + msg);
             synchronized (clientList) {
                 for (ClientConnectionData c : clientList){
                     if (!c.getSocket().getInetAddress().equals(client.getSocket().getInetAddress()))
@@ -56,7 +56,7 @@ public class ServerClientHandler implements Runnable {
     public void whisper(String msg, ClientConnectionData usr) {
         try {
             assert usr != null;
-            System.out.println("Whispering -- " + msg);
+            System.out.println("Whispering to " + usr.getUserName() + " -- " + msg);
             usr.getOut().println(msg);
         } catch (AssertionError ex) {
             System.out.println("That user does not exist.");
@@ -74,7 +74,6 @@ public class ServerClientHandler implements Runnable {
 
             client.getOut().println("SUBMITNAME");
             boolean nameValidity = false;
-
 
             while (!nameValidity) {
                 String userName = in.readLine().trim();
@@ -95,16 +94,13 @@ public class ServerClientHandler implements Runnable {
                     nameValidity = true;
                     client.setUserName(userName);
                     client.getOut().println("ACCEPT");
-
                 }
             }
 
             //notify all that client has joined
-            broadcast(String.format("WELCOME %s", client.getUserName()));
-
+            broadcastExcludeSender(String.format("WELCOME %s", client.getUserName()));
 
             String incoming;
-
             while( (incoming = in.readLine()) != null) {
                 if (incoming.startsWith("CHAT")) {
                     String chat = incoming.substring(4).trim();

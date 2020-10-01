@@ -51,7 +51,7 @@ public class ChatServer {
         } 
     }
 
-    public static void SwitchRooms(ClientConnectionData client,String Name){
+    public static void switchRooms(ClientConnectionData client, String Name){
         //if name valid swap
         //use name to find correct server
         //remove from current server add to new server
