@@ -36,9 +36,26 @@ public class ServerClientHandler implements Runnable {
     public void run() {
         try {
             BufferedReader in = client.getInput();
-            //get userName, first message from user
+            //TODO: get userName, first message from user
+
+            client.notify();
             String userName = in.readLine().trim();
-            client.setUserName(userName);
+            boolean nameValidity = false;
+
+            while (nameValidity != true) {
+                if (userName.contains(" ") || userName.equals("") || clientList.contains(client)) {
+                    in = client.getInput();
+                    userName = in.readLine().trim();
+                }
+                else {
+                    client.setUserName(userName);
+                    nameValidity = true;
+                }
+            }
+            
+
+
+
             //notify all that client has joined
             broadcast(String.format("WELCOME %s", client.getUserName()));
 
@@ -77,5 +94,4 @@ public class ServerClientHandler implements Runnable {
 
         }
     }
-
 }
