@@ -29,12 +29,13 @@ public class ChatClient {
         socketIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         out = new PrintWriter(socket.getOutputStream(), true);
 
-
+        String firstMsg="";
         System.out.print("Chat sessions has started - enter a user name: ");
         do {
             String name = userInput.nextLine().trim();
             out.println(name); //out.flush();
-        }while(socketIn.readLine().equals("SUBMITNAME"));
+        }while((firstMsg=socketIn.readLine()).equals("SUBMITNAME"));
+        System.out.println(firstMsg);
         // start a thread to listen for server messages
         ServerListener listener = new ServerListener(socketIn);
         Thread t = new Thread(listener);
@@ -45,9 +46,7 @@ public class ChatClient {
         String line = userInput.nextLine().trim();
         while (!line.toLowerCase().startsWith("/quit")) {
             line = line.trim();
-            String prefix = parse(line);
-            String body = line.replaceAll(prefix,"");
-            String msg = String.format("%s %s",prefix, body);
+            String msg = parse(line);
             out.println(msg);
             line = userInput.nextLine().trim();
         }
@@ -58,23 +57,24 @@ public class ChatClient {
         socket.close();
     }
     public static String parse(String msg){
-        if(msg.charAt(0)=='@'){
-            return PCHAT;
+        String tempMsg = msg.toLowerCase();
+        if(tempMsg.charAt(0)=='@'){
+            return String.format("%s %s",PCHAT,msg.substring("@".length()).trim());
         }
-        if(msg.startsWith("/list")){
-            return LIST_ROOM;
+        else if(tempMsg.startsWith("/list")){
+            return String.format("%s %s",LIST_ROOM,msg.substring("/list".length()).trim());
         }
-        if(msg.startsWith("join")){
-            return JOIN_ROOM;
+        else if(tempMsg.startsWith("join")){
+            return String.format("%s %s",JOIN_ROOM,msg.substring("join".length()).trim());
         }
-        if (msg.startsWith("/leave")){
-            return LEAVE_ROOM;
+        else if (tempMsg.startsWith("/leave")){
+            return String.format("%s %s",LEAVE_ROOM,msg.substring("/leave".length()).trim());
         }
-        if(msg.startsWith("/make")){
-            return MAKE_ROOM;
+        else if(tempMsg.startsWith("/make")){
+            return String.format("%s %s",MAKE_ROOM,msg.substring("/make".length()).trim());
         }
         else{
-            return CHAT;
+            return String.format("%s %s",CHAT,msg.trim());
         }
 
 
