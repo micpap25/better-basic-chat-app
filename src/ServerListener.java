@@ -14,6 +14,7 @@ public class ServerListener implements Runnable {
 
             while((incoming = socketIn.readLine()) != null) {
                 String Msg = "";
+                System.out.println(incoming);
                 String[] info = incoming.split(" ");
                 if (info[0].equals("WELCOME")){
                     Msg = info[1]+" has joined";

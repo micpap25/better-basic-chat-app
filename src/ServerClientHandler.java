@@ -74,23 +74,28 @@ public class ServerClientHandler implements Runnable {
 
             client.getOut().println("SUBMITNAME");
             boolean nameValidity = false;
-            boolean repeat = false;
+
 
             while (!nameValidity) {
                 String userName = in.readLine().trim();
-                for (ClientConnectionData c : clientList) {
-                    if (c.getName().equals(userName)) {
-                        repeat = true;
-                        break;
+                boolean repeat = false;
+
+                synchronized (clientList) {
+                    for (ClientConnectionData c : clientList) {
+                        if (c.getUserName()!=null && c.getUserName().equals(userName)) {
+                            repeat = true;
+                            break;
+                        }
                     }
                 }
                 if (userName.contains(" ") || userName.equals("") || repeat) {
                     client.getOut().println("SUBMITNAME");
                 }
                 else {
-                    client.setUserName(userName);
                     nameValidity = true;
-                    client.getOut().println("Thank you! " + userName);
+                    client.setUserName(userName);
+                    client.getOut().println("ACCEPT");
+
                 }
             }
 
