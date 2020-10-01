@@ -16,6 +16,7 @@ public class ChatClient {
     public static final String JOIN_ROOM ="JOIN_ROOM";
     public static final String LEAVE_ROOM ="LEAVE_ROOM";
     public static final String LIST_ROOM="LIST_ROOM";
+
     public static void main(String[] args) throws Exception {
         Scanner userInput = new Scanner(System.in);
 
@@ -41,8 +42,6 @@ public class ChatClient {
         Thread t = new Thread(listener);
         t.start();
 
-
-
         String line = userInput.nextLine().trim();
         while (!line.toLowerCase().startsWith("/quit")) {
             line = line.trim();
@@ -56,6 +55,7 @@ public class ChatClient {
         socketIn.close();
         socket.close();
     }
+
     public static String parse(String msg){
         String tempMsg = msg.toLowerCase();
         if(tempMsg.charAt(0)=='@'){
@@ -76,8 +76,6 @@ public class ChatClient {
         else{
             return String.format("%s %s",CHAT,msg.trim());
         }
-
-
     }
 }
 

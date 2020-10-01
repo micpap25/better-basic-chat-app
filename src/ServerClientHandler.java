@@ -143,7 +143,6 @@ public class ServerClientHandler implements Runnable {
             try {
                 client.getSocket().close();
             } catch (IOException ignored) {}
-
         }
     }
 }

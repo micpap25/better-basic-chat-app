@@ -10,7 +10,6 @@ public class ClientConnectionData {
     private String userName;
     private String room;
 
-
     public ClientConnectionData(Socket socket, BufferedReader input, PrintWriter out, String name) {
         this.socket = socket;
         this.input = input;
@@ -65,6 +64,4 @@ public class ClientConnectionData {
     public void setUserName(String userName) {
         this.userName = userName;
     }
-
-    
 }

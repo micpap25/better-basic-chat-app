@@ -13,6 +13,7 @@ public class ChatServer {
     public static final int PORT = 54321;
     private static final ArrayList<ClientConnectionData> clientList = new ArrayList<>();
     //default room name ....
+
     public static void main(String[] args) throws Exception {
         ExecutorService pool = Executors.newFixedThreadPool(100);
 
@@ -49,11 +50,11 @@ public class ChatServer {
             }
         } 
     }
+
     public static void SwitchRooms(ClientConnectionData client,String Name){
         //if name valid swap
         //use name to find correct server
         //remove from current server add to new server
         //if not valid then send back no
     }
-
 }
