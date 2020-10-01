@@ -76,10 +76,11 @@ public class ServerClientHandler implements Runnable {
             boolean nameValidity = false;
             boolean repeat = false;
 
-            while (nameValidity != true) {
+            while (!nameValidity) {
                 for (ClientConnectionData c : clientList) {
                     if (c.getName().equals(userName)) {
                         repeat = true;
+                        break;
                     }
                 }
                 if (userName.contains(" ") || userName.equals("") || !repeat) {
@@ -111,15 +112,14 @@ public class ServerClientHandler implements Runnable {
                     String chat = incoming.substring(5).trim();
                     String name= chat.split(" ")[0];
                     String content = chat.split(" ")[1];
-                    ClientConnectionData usr = null;
-                    for (ClientConnectionData c : clientList){
-                        if (c.getName().equals(name)){
-                            usr = c;
+                    if (content.length() > 0) {
+                        String msg = String.format("PCHAT %s %s", client.getUserName(), content);
+                        for (ClientConnectionData c : clientList){
+                            if (c.getName().equals(name)) {
+                                whisper(msg, c);
+                                break;
+                            }
                         }
-                    }
-                    if (chat.length() > 0) {
-                        String msg = String.format("PCHAT %s %s", client.getUserName(), chat);
-                        whisper(msg, usr);
                     }
                 } else if (incoming.startsWith("QUIT")){
                     break;
