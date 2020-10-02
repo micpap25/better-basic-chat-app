@@ -71,9 +71,6 @@ public class ChatClient {
         else if (tempMsg.startsWith("/leave")){
             return String.format("%s %s",LEAVE_ROOM,msg.substring("/leave".length()).trim());
         }
-        else if(tempMsg.startsWith("/make")){
-            return String.format("%s %s",MAKE_ROOM,msg.substring("/make".length()).trim());
-        }
         else{
             return String.format("%s %s",CHAT,msg.trim());
         }

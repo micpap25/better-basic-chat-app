@@ -2,17 +2,27 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ServerClientHandler implements Runnable {
     // Maintain data about the client serviced by this thread
     ClientConnectionData client;
     final ArrayList<ClientConnectionData> clientList;
+    public HashSet<String> servers = new HashSet<>();
 
     public ServerClientHandler(ClientConnectionData client, ArrayList<ClientConnectionData> clientList) {
         this.client = client;
         this.clientList = clientList;
     }
-
+    private void populateSet(){
+        servers.clear();
+        synchronized (clientList) {
+            for (ClientConnectionData c:clientList){
+                servers.add(c.getRoom());
+            }
+        }
+    }
     /**
      * Broadcasts a message to all clients connected to the server.
      */
