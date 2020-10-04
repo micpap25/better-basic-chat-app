@@ -35,28 +35,12 @@ public class ServerClientHandler implements Runnable {
             ex.printStackTrace();
         }
     }
-    /**
-     * Broadcasts a message to all clients connected to the server.
-     */
-    public void broadcast(String msg) {
-        try {
-            System.out.println("Broadcasting -- " + msg);
-            synchronized (clientList) {
-                for (ClientConnectionData c : clientList){
-                    c.getOut().println(msg);
-                }
-            }
-        } catch (Exception ex) {
-            System.out.println("broadcast caught exception: " + ex);
-            ex.printStackTrace();
-        }
-    }
 
     /**
      * Broadcasts a message to all clients
      * other than the message sender connected to the server.
      */
-    public void broadcastExcludeSender(String msg) {
+    public void broadcast(String msg) {
         try {
             System.out.println("Exclusively Broadcasting -- " + msg);
             synchronized (clientList) {
@@ -119,7 +103,7 @@ public class ServerClientHandler implements Runnable {
             }
 
             //notify all that client has joined
-            broadcastExcludeSender(String.format("WELCOME %s", client.getUserName()));
+            broadcast(String.format("WELCOME %s", client.getUserName()));
 
             String incoming;
             while( (incoming = in.readLine()) != null) {
@@ -127,7 +111,7 @@ public class ServerClientHandler implements Runnable {
                     String chat = incoming.substring(4).trim();
                     if (chat.length() > 0) {
                         String msg = String.format("CHAT %s %s", client.getUserName(), chat);
-                        broadcastExcludeSender(msg);
+                        broadcast(msg);
                     }
                 } else if (incoming.startsWith("PCHAT")) {
                     String chat = incoming.substring(5).trim();
@@ -161,7 +145,7 @@ public class ServerClientHandler implements Runnable {
                 clientList.remove(client);
             }
             System.out.println(client.getName() + " has left.");
-            broadcastExcludeSender(String.format("EXIT %s", client.getUserName()));
+            broadcast(String.format("EXIT %s", client.getUserName()));
             try {
                 client.getSocket().close();
             } catch (IOException ignored) {}
