@@ -13,7 +13,7 @@ public class ChatClient {
     public static final String QUIT = "QUIT";
     public static final String JOIN_ROOM ="JOIN_ROOM";
     public static final String LEAVE_ROOM ="LEAVE_ROOM";
-    public static final String LIST_ROOM="LIST_ROOM";
+    public static final String LIST_ROOM="LIST";
 
     public static void main(String[] args) throws Exception {
         Scanner userInput = new Scanner(System.in);

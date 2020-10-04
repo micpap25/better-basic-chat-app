@@ -18,7 +18,7 @@ public class ServerClientHandler implements Runnable {
      * Lists all rooms in the server
      */
 
-    private void listRooms(ClientConnectionData usr){
+    private void listRooms(){
         try {
             System.out.println("Listing rooms");
             HashSet<String> rooms = new HashSet<>();
@@ -27,25 +27,63 @@ public class ServerClientHandler implements Runnable {
                     rooms.add(c.getRoom());
                 }
             }
+            StringBuilder sb = new StringBuilder("LIST ");
             for (String s : rooms) {
-                System.out.print(s + " ");
+                sb.append(s.trim()).append(" ");
             }
+            client.getOut().println(sb.toString());
         } catch (Exception ex) {
             System.out.println("listing caught exception: " + ex);
             ex.printStackTrace();
         }
     }
+    /**
+     * Join a room
+     */
+    private void joinRoom(String room) {
+        try {
+            System.out.println(client.getUserName() + " joining room " + client.getRoom());
+            client.setRoom(room);
+            for (ClientConnectionData c : clientList) {
+                if (c.getRoom().equals(room)) {
+                    c.getOut().printf("%s %s\n", "JOIN_ROOM", client.getUserName());
+                }
+            }
+        } catch (Exception ex) {
+            System.out.println("join_room caught exception: " + ex);
+            ex.printStackTrace();
+        }
+    }
 
+    /**
+     * Leave current room
+     */
+    private void leaveRoom(){
+        try {
+            System.out.println(client.getUserName() + " leaving room " + client.getRoom());
+            String room = client.getRoom();
+            client.setRoom(null);
+            for (ClientConnectionData c : clientList) {
+                if (c.getRoom().equals(room)) {
+                    c.getOut().printf("%s %s\n", "LEAVE_ROOM", client.getUserName());
+                }
+            }
+        } catch (Exception ex) {
+            System.out.println("leave_room caught exception: " + ex);
+            ex.printStackTrace();
+        }
+    }
     /**
      * Broadcasts a message to all clients
      * other than the message sender connected to the server.
+     * If the client is in a room, braodcasts to those in the room instead.
      */
     public void broadcast(String msg) {
         try {
-            System.out.println("Exclusively Broadcasting -- " + msg);
+            System.out.println("Broadcasting -- " + msg);
             synchronized (clientList) {
                 for (ClientConnectionData c : clientList){
-                    if (!c.getUserName().equals(client.getUserName()))
+                    if (!c.getUserName().equals(client.getUserName()) && c.getRoom().equals(client.getRoom()))
                         c.getOut().println(msg);
                 }
             }
@@ -127,6 +165,15 @@ public class ServerClientHandler implements Runnable {
                             }
                         }
                     }
+                } else if (incoming.startsWith("JOIN_ROOM")) {
+                    String room = incoming.substring(9).trim();
+                    if (room.length() > 0) {
+                        joinRoom(room);
+                    }
+                } else if (incoming.startsWith("LEAVE_ROOM")) {
+                    leaveRoom();
+                } else if (incoming.startsWith("LIST")) {
+                    listRooms();
                 } else if (incoming.startsWith("QUIT")){
                     break;
                 }
@@ -141,6 +188,7 @@ public class ServerClientHandler implements Runnable {
             }
         } finally {
             //Remove client from clientList, notify all
+            client.setRoom(null);
             synchronized (clientList) {
                 clientList.remove(client);
             }

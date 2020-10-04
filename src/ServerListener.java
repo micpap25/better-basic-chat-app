@@ -44,6 +44,9 @@ public class ServerListener implements Runnable {
                         }
                         msg = k.toString();
                         break;
+                    case "JOIN_ROOM":
+                        msg = info[1] + " has joined the room";
+                        break;
                     case "LEAVE_ROOM":
                         msg = info[1] + " has left the room";
                         break;
