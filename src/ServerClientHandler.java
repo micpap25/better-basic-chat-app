@@ -42,7 +42,7 @@ public class ServerClientHandler implements Runnable {
      */
     private void joinRoom(String room) {
         try {
-            System.out.println(client.getUserName() + " joining room " + client.getRoom());
+            System.out.println(client.getUserName() + " joining room " + room);
             client.setRoom(room);
             for (ClientConnectionData c : clientList) {
                 if (c.getRoom().equals(room)) {
@@ -62,7 +62,7 @@ public class ServerClientHandler implements Runnable {
         try {
             System.out.println(client.getUserName() + " leaving room " + client.getRoom());
             String room = client.getRoom();
-            client.setRoom(null);
+            client.setRoom("");
             for (ClientConnectionData c : clientList) {
                 if (c.getRoom().equals(room)) {
                     c.getOut().printf("%s %s\n", "LEAVE_ROOM", client.getUserName());
@@ -188,7 +188,7 @@ public class ServerClientHandler implements Runnable {
             }
         } finally {
             //Remove client from clientList, notify all
-            client.setRoom(null);
+            client.setRoom("");
             synchronized (clientList) {
                 clientList.remove(client);
             }
