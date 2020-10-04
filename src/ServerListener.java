@@ -35,6 +35,15 @@ public class ServerListener implements Runnable {
                     case "EXIT":
                         msg = info[1] + " has left the server";
                         break;
+                    case "LIST":
+                        StringBuilder k = new StringBuilder("\n-----ACTIVE SERVERS------");
+                        k.append("\n");
+                        for (int i = 1; i < info.length ; i++) {
+                            k.append(info[i]);
+                            k.append("\n");
+                        }
+                        msg = k.toString();
+                        break;
                     case "EXIT_ROOM":
                         msg = info[1] + " has left the room";
                         break;
