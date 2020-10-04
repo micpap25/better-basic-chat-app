@@ -8,11 +8,9 @@ public class ChatClient {
     private static Socket socket;
     private static BufferedReader socketIn;
     private static PrintWriter out;
-    public static final String NAME = "NAME";
     public static final String CHAT = "CHAT";
     public static final String PCHAT = "PCHAT";
     public static final String QUIT = "QUIT";
-    public static final String MAKE_ROOM = "MAKE_ROOM";
     public static final String JOIN_ROOM ="JOIN_ROOM";
     public static final String LEAVE_ROOM ="LEAVE_ROOM";
     public static final String LIST_ROOM="LIST_ROOM";

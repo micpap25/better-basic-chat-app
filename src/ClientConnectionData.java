@@ -17,14 +17,6 @@ public class ClientConnectionData {
         this.name = name;
     }
 
-    public String getRoom() {
-        return room;
-    }
-
-    public void setRoom(String room) {
-        this.room = room;
-    }
-
     public Socket getSocket() {
         return socket;
     }
@@ -64,4 +56,13 @@ public class ClientConnectionData {
     public void setUserName(String userName) {
         this.userName = userName;
     }
+
+    public String getRoom() {
+        return room;
+    }
+
+    public void setRoom(String room) {
+        this.room = room;
+    }
+
 }
