@@ -63,13 +63,13 @@ public class ChatClient {
             return String.format("%s %s",PCHAT,msg.substring("@".length()).trim());
         }
         else if(tempMsg.startsWith("/list")){
-            return String.format("%s %s",LIST_ROOM,msg.substring("/list".length()).trim());
+            return LIST_ROOM;
         }
         else if(tempMsg.startsWith("join")){
             return String.format("%s %s",JOIN_ROOM,msg.substring("join".length()).trim());
         }
         else if (tempMsg.startsWith("/leave")){
-            return String.format("%s %s",LEAVE_ROOM,msg.substring("/leave".length()).trim());
+            return LEAVE_ROOM;
         }
         else{
             return String.format("%s %s",CHAT,msg.trim());
