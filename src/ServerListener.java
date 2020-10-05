@@ -35,7 +35,7 @@ public class ServerListener implements Runnable {
                     case ChatServer.PCHAT:
                         msg = info[1] + " (private): " + slice(info,2,info.length," ");
                         break;
-                    case "EXIT":
+                    case ChatServer.QUIT:
                         msg = info[1] + " has left the server";
                         break;
                     case ChatServer.LIST:

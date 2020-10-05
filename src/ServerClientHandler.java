@@ -193,7 +193,7 @@ public class ServerClientHandler implements Runnable {
                 clientList.remove(client);
             }
             System.out.println(client.getName() + " has left.");
-            broadcast(String.format("EXIT %s", client.getUserName()));
+            broadcast(String.format("%s %s",ChatServer.QUIT, client.getUserName()));
             try {
                 client.getSocket().close();
             } catch (IOException ignored) {}
