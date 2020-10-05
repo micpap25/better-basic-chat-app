@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 public class ServerClientHandler implements Runnable {
+
     // Maintain data about the client serviced by this thread
     ClientConnectionData client;
     final ArrayList<ClientConnectionData> clientList;
@@ -27,7 +28,7 @@ public class ServerClientHandler implements Runnable {
                     rooms.add(c.getRoom());
                 }
             }
-            StringBuilder sb = new StringBuilder("LIST ");
+            StringBuilder sb = new StringBuilder(ChatServer.LIST + " ");
             for (String s : rooms) {
                 sb.append(s.trim()).append(" ");
             }
@@ -46,7 +47,7 @@ public class ServerClientHandler implements Runnable {
             client.setRoom(room);
             for (ClientConnectionData c : clientList) {
                 if (c.getRoom().equals(room)) {
-                    c.getOut().printf("%s %s\n", "JOIN_ROOM", client.getUserName());
+                    c.getOut().printf("%s %s\n", ChatServer.JOIN_ROOM, client.getUserName());
                 }
             }
         } catch (Exception ex) {
@@ -65,7 +66,7 @@ public class ServerClientHandler implements Runnable {
             client.setRoom("");
             for (ClientConnectionData c : clientList) {
                 if (c.getRoom().equals(room)) {
-                    c.getOut().printf("%s %s\n", "LEAVE_ROOM", client.getUserName());
+                    c.getOut().printf("%s %s\n", ChatServer.LEAVE_ROOM, client.getUserName());
                 }
             }
         } catch (Exception ex) {
@@ -145,16 +146,15 @@ public class ServerClientHandler implements Runnable {
 
             String incoming;
             while( (incoming = in.readLine()) != null) {
-                if (incoming.startsWith("CHAT")) {
+                if (incoming.startsWith(ChatServer.CHAT)) {
                     String chat = incoming.substring(4).trim();
                     if (chat.length() > 0) {
                         String msg = String.format("CHAT %s %s", client.getUserName(), chat);
                         broadcast(msg);
                     }
-                } else if (incoming.startsWith("PCHAT")) {
+                } else if (incoming.startsWith(ChatServer.PCHAT)) {
                     String chat = incoming.substring(5).trim();
                     String name = chat.split(" ")[0];
-                    //TODO: If every single word gets cut off this is the problem
                     String content = chat.substring(name.length()).trim();
                     if (content.length() > 0) {
                         String msg = String.format("PCHAT %s %s", client.getUserName(), content);
@@ -165,16 +165,16 @@ public class ServerClientHandler implements Runnable {
                             }
                         }
                     }
-                } else if (incoming.startsWith("JOIN_ROOM")) {
+                } else if (incoming.startsWith(ChatServer.JOIN_ROOM)) {
                     String room = incoming.substring(9).trim();
                     if (room.length() > 0) {
                         joinRoom(room);
                     }
-                } else if (incoming.startsWith("LEAVE_ROOM")) {
+                } else if (incoming.startsWith(ChatServer.LEAVE_ROOM)) {
                     leaveRoom();
-                } else if (incoming.startsWith("LIST")) {
+                } else if (incoming.startsWith(ChatServer.LIST)) {
                     listRooms();
-                } else if (incoming.startsWith("QUIT")){
+                } else if (incoming.startsWith(ChatServer.QUIT)){
                     break;
                 }
             }

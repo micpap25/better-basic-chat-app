@@ -13,7 +13,7 @@ public class ChatClient {
     public static final String QUIT = "QUIT";
     public static final String JOIN_ROOM ="JOIN_ROOM";
     public static final String LEAVE_ROOM ="LEAVE_ROOM";
-    public static final String LIST_ROOM="LIST";
+    public static final String LIST ="LIST";
 
     public static void main(String[] args) throws Exception {
         Scanner userInput = new Scanner(System.in);
@@ -61,7 +61,7 @@ public class ChatClient {
             return String.format("%s %s",PCHAT,msg.substring("@".length()).trim());
         }
         else if(tempMsg.startsWith("/list")){
-            return LIST_ROOM;
+            return LIST;
         }
         else if(tempMsg.startsWith("join")){
             return String.format("%s %s",JOIN_ROOM,msg.substring("join".length()).trim());

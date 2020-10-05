@@ -1,11 +1,13 @@
 import java.io.BufferedReader;
 
 public class ServerListener implements Runnable {
+
     BufferedReader socketIn;
 
     public ServerListener(BufferedReader socketIn) {
         this.socketIn = socketIn;
     }
+
     private String slice(String[] array,int start,int end,String insert){
         StringBuilder message = new StringBuilder();
         for (int i = start; i < end || i<array.length; i++) {
@@ -14,6 +16,7 @@ public class ServerListener implements Runnable {
         }
         return message.toString().trim();
     }
+
     @Override
     public void run() {
         try {
@@ -26,16 +29,16 @@ public class ServerListener implements Runnable {
                     case "WELCOME":
                         msg = info[1] + " has joined";
                         break;
-                    case "CHAT":
+                    case ChatServer.CHAT:
                         msg = info[1] + ": " + slice(info,2,info.length," ");
                         break;
-                    case "PCHAT":
+                    case ChatServer.PCHAT:
                         msg = info[1] + " (private): " + slice(info,2,info.length," ");
                         break;
                     case "EXIT":
                         msg = info[1] + " has left the server";
                         break;
-                    case "LIST":
+                    case ChatServer.LIST:
                         StringBuilder k = new StringBuilder("\n-----ACTIVE ROOMS------");
                         k.append("\n");
                         for (int i = 1; i < info.length ; i++) {
@@ -44,10 +47,10 @@ public class ServerListener implements Runnable {
                         }
                         msg = k.toString();
                         break;
-                    case "JOIN_ROOM":
+                    case ChatServer.JOIN_ROOM:
                         msg = info[1] + " has joined the room";
                         break;
-                    case "LEAVE_ROOM":
+                    case ChatServer.LEAVE_ROOM:
                         msg = info[1] + " has left the room";
                         break;
                 }

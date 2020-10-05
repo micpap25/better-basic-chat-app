@@ -13,6 +13,13 @@ public class ChatServer {
     public static final int PORT = 54321;
     private static final ArrayList<ClientConnectionData> clientList = new ArrayList<>();
 
+    public static final String CHAT = "CHAT";
+    public static final String PCHAT = "PCHAT";
+    public static final String QUIT = "QUIT";
+    public static final String JOIN_ROOM = "JOIN_ROOM";
+    public static final String LEAVE_ROOM = "LEAVE_ROOM";
+    public static final String LIST = "LIST";
+
     public static void main(String[] args) throws Exception {
         ExecutorService pool = Executors.newFixedThreadPool(100);
 
