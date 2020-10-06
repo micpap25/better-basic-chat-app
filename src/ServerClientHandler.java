@@ -84,7 +84,7 @@ public class ServerClientHandler implements Runnable {
             System.out.println("Broadcasting -- " + msg);
             synchronized (clientList) {
                 for (ClientConnectionData c : clientList){
-                    if (!c.getUserName().equals(client.getUserName()) && c.getRoom().equals(client.getRoom()))
+                    if (c.getUserName()!=null && !c.getUserName().equals(client.getUserName()) && c.getRoom().equals(client.getRoom()))
                         c.getOut().println(msg);
                 }
             }
@@ -100,6 +100,7 @@ public class ServerClientHandler implements Runnable {
     public void whisper(String msg, ClientConnectionData usr) {
         try {
             assert usr != null;
+            assert usr.getUserName()!=null;
             System.out.println("Whispering to " + usr.getUserName() + " -- " + msg);
             usr.getOut().println(msg);
         } catch (AssertionError ex) {
@@ -110,42 +111,56 @@ public class ServerClientHandler implements Runnable {
         }
     }
 
+    public void naming(String userName){
+        try {
+            client.setUserName(null);
+            boolean nameValidity = false;
+            while (!nameValidity) {
+                nameValidity = true;
+
+                if (userName == null || userName.contains(" ") || userName.equals("")) {
+                    nameValidity = false;
+                } else {
+                    synchronized (clientList) {
+                        for (ClientConnectionData c : clientList) {
+                            if (c.getUserName() != null && c.getUserName().equals(userName)) {
+                                nameValidity = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (!nameValidity) {
+                    client.getOut().println("SUBMITNAME");
+                    userName = client.getInput().readLine();
+                    userName = userName.substring(ChatServer.NAME.length());
+                    userName = userName.trim();
+                } else {
+                    client.setUserName(userName);
+                    client.getOut().println("ACCEPT " + userName);
+                }
+            }
+        }catch (IOException e) {
+            System.out.println("naming failed");
+            userName = client.getName();
+            client.setUserName(userName);
+            client.getOut().println("ACCEPT " + userName);
+        }
+    }
+
     @Override
     public void run() {
         try {
             BufferedReader in = client.getInput();
             //TODO: get userName, first message from user
-
-            client.getOut().println("SUBMITNAME");
-            boolean nameValidity = false;
-
-            while (!nameValidity) {
-                String userName = in.readLine().trim();
-                boolean repeat = false;
-
-                synchronized (clientList) {
-                    for (ClientConnectionData c : clientList) {
-                        if (c.getUserName()!=null && c.getUserName().equals(userName)) {
-                            repeat = true;
-                            break;
-                        }
-                    }
-                }
-                if (userName.contains(" ") || userName.equals("") || repeat) {
-                    client.getOut().println("SUBMITNAME");
-                }
-                else {
-                    nameValidity = true;
-                    client.setUserName(userName);
-                    client.getOut().println("ACCEPT");
-                }
-            }
-
+            naming(null);
             //notify all that client has joined
             broadcast(String.format("WELCOME %s", client.getUserName()));
 
             String incoming;
             while( (incoming = in.readLine()) != null) {
+                System.out.println(incoming);
                 if (incoming.startsWith(ChatServer.CHAT)) {
                     String chat = incoming.substring(4).trim();
                     if (chat.length() > 0) {
@@ -158,13 +173,15 @@ public class ServerClientHandler implements Runnable {
                     String content = chat.substring(name.length()).trim();
                     if (content.length() > 0) {
                         String msg = String.format("PCHAT %s %s", client.getUserName(), content);
-                        for (ClientConnectionData c : clientList){
+                        for (ClientConnectionData c : clientList) {
                             if (c.getUserName().equals(name)) {
                                 whisper(msg, c);
                                 break;
                             }
                         }
                     }
+                } else if(incoming.startsWith(ChatServer.NAME)){
+                    naming(incoming.substring(ChatServer.NAME.length()).trim());
                 } else if (incoming.startsWith(ChatServer.JOIN_ROOM)) {
                     String room = incoming.substring(9).trim();
                     if (room.length() > 0) {

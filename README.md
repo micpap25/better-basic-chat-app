@@ -11,3 +11,4 @@ Chat rooms can now be created
 /list: lists all room names
 join *: puts the client in room *.
 /leave: removes the client from room *.
+/name * allows the user to rename themselves.

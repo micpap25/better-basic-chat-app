@@ -1,10 +1,12 @@
 import java.io.BufferedReader;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ServerListener implements Runnable {
 
     BufferedReader socketIn;
-
-    public ServerListener(BufferedReader socketIn) {
+    AtomicBoolean naming;
+    public ServerListener(BufferedReader socketIn, AtomicBoolean naming) {
+        this.naming = naming;
         this.socketIn = socketIn;
     }
 
@@ -26,6 +28,13 @@ public class ServerListener implements Runnable {
                 //System.out.println(incoming);
                 String[] info = incoming.split(" ");
                 switch (info[0]) {
+                    case "SUBMITNAME":
+                        msg = "Please choose a valid username";
+                        break;
+                    case "ACCEPT":
+                        msg = "Username set as: "+slice(info,1,info.length," ");
+                        naming.set(false);
+                        break;
                     case "WELCOME":
                         msg = info[1] + " has joined";
                         break;
