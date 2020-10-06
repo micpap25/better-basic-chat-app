@@ -57,7 +57,10 @@ public class ChatClient {
 
     public static String parse(String msg){
         String tempMsg = msg.toLowerCase();
-        if(tempMsg.charAt(0)=='@'){
+        if (tempMsg.length() == 0) {
+            return null;
+        }
+        else if(tempMsg.charAt(0)=='@'){
             return String.format("%s %s",PCHAT,msg.substring("@".length()).trim());
         }
         else if(tempMsg.startsWith("/list")){
