@@ -57,8 +57,8 @@ public class ChatClient {
         else if(tempMsg.startsWith("/list")){
             return ChatServer.LIST;
         }
-        else if(tempMsg.startsWith("join")){
-            return String.format("%s %s",ChatServer.JOIN_ROOM,msg.substring("join".length()).trim());
+        else if(tempMsg.startsWith("/join")){
+            return String.format("%s %s",ChatServer.JOIN_ROOM,msg.substring("/join".length()).trim());
         }
         else if (tempMsg.startsWith("/leave")){
             return ChatServer.LEAVE_ROOM;
