@@ -1,10 +1,8 @@
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.lang.reflect.Array;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 
 //TODO: Change all the "writeObjects" to actually send objects
 //Make sure you trim stuff before sending it
@@ -176,6 +174,7 @@ public class ServerClientHandler implements Runnable {
             broadcast(new ChatMessage(ChatServer.WELCOME, client.getUserName()));
 
             ChatMessage incoming;
+            active:
             while( (incoming = (ChatMessage) in.readObject()) != null) {
                 String msgHeader = incoming.getMsgHeader();
                 String clientMsg = incoming.getMessage();
@@ -183,28 +182,37 @@ public class ServerClientHandler implements Runnable {
                 System.out.printf("%s %s %s\n",
                         msgHeader, incoming.getRecipients().toString(), clientMsg);
 
-                if (msgHeader.equals(ChatServer.CHAT)) {
-                    ChatMessage msg = new ChatMessage(ChatServer.CHAT, String.format("%s %s", client.getUserName(), clientMsg));
-                    broadcast(msg);
-                } else if (msgHeader.equals(ChatServer.PCHAT)) {
-                    ChatMessage msg = new ChatMessage(ChatServer.PCHAT, String.format("%s %s", client.getUserName(), clientMsg));
-                    ArrayList<ClientConnectionData> recipients = new ArrayList<>();
-                    for (ClientConnectionData c : clientList) {
-                        if (incoming.getRecipients().contains(c.getUserName())) {
-                            recipients.add(c);
-                        }
+                switch (msgHeader) {
+                    case ChatServer.CHAT: {
+                        ChatMessage msg = new ChatMessage(ChatServer.CHAT, String.format("%s %s", client.getUserName(), clientMsg));
+                        broadcast(msg);
+                        break;
                     }
-                    whisper(msg, recipients);
-                } else if(msgHeader.equals(ChatServer.NAME)){
-                    naming(clientMsg);
-                } else if (msgHeader.equals(ChatServer.JOIN_ROOM)) {
-                    joinRoom(clientMsg);
-                } else if (msgHeader.equals(ChatServer.LEAVE_ROOM)) {
-                    leaveRoom();
-                } else if (msgHeader.equals(ChatServer.LIST)) {
-                    listRooms();
-                } else if (msgHeader.equals(ChatServer.QUIT)){
-                    break;
+                    case ChatServer.PCHAT: {
+                        ChatMessage msg = new ChatMessage(ChatServer.PCHAT, String.format("%s %s", client.getUserName(), clientMsg));
+                        ArrayList<ClientConnectionData> recipients = new ArrayList<>();
+                        for (ClientConnectionData c : clientList) {
+                            if (incoming.getRecipients().contains(c.getUserName())) {
+                                recipients.add(c);
+                            }
+                        }
+                        whisper(msg, recipients);
+                        break;
+                    }
+                    case ChatServer.NAME:
+                        naming(clientMsg);
+                        break;
+                    case ChatServer.JOIN_ROOM:
+                        joinRoom(clientMsg);
+                        break;
+                    case ChatServer.LEAVE_ROOM:
+                        leaveRoom();
+                        break;
+                    case ChatServer.LIST:
+                        listRooms();
+                        break;
+                    case ChatServer.QUIT:
+                        break active;
                 }
             }
         } catch (Exception ex) {
@@ -212,7 +220,6 @@ public class ServerClientHandler implements Runnable {
                 System.out.println("Caught socket ex for " +
                         client.getName());
             } else {
-                System.out.println(ex);
                 ex.printStackTrace();
             }
         } finally {
