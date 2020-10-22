@@ -1,8 +1,13 @@
-import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.lang.reflect.Array;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
+
+//TODO: Change all the "writeObjects" to actually send objects
+//Make sure you trim stuff before sending it
 
 public class ServerClientHandler implements Runnable {
 
@@ -32,7 +37,8 @@ public class ServerClientHandler implements Runnable {
             for (String s : rooms) {
                 sb.append(s.trim()).append(" ");
             }
-            client.getOut().println(sb.toString());
+            client.getOut().writeObject(sb.toString());
+            client.getOut().flush();
         } catch (Exception ex) {
             System.out.println("listing caught exception: " + ex);
             ex.printStackTrace();
@@ -47,7 +53,8 @@ public class ServerClientHandler implements Runnable {
             client.setRoom(room);
             for (ClientConnectionData c : clientList) {
                 if (c.getRoom().equals(room)) {
-                    c.getOut().printf("%s %s\n", ChatServer.JOIN_ROOM, client.getUserName());
+                    c.getOut().writeObject(String.format("%s %s\n", ChatServer.JOIN_ROOM, client.getUserName()));
+                    client.getOut().flush();
                 }
             }
         } catch (Exception ex) {
@@ -66,7 +73,8 @@ public class ServerClientHandler implements Runnable {
             client.setRoom("");
             for (ClientConnectionData c : clientList) {
                 if (c.getRoom().equals(room)) {
-                    c.getOut().printf("%s %s\n", ChatServer.LEAVE_ROOM, client.getUserName());
+                    c.getOut().writeObject(String.format("%s %s\n", ChatServer.LEAVE_ROOM, client.getUserName()));
+                    client.getOut().flush();
                 }
             }
         } catch (Exception ex) {
@@ -79,13 +87,14 @@ public class ServerClientHandler implements Runnable {
      * other than the message sender connected to the server.
      * If the client is in a room, braodcasts to those in the room instead.
      */
-    public void broadcast(String msg) {
+    public void broadcast(ChatMessage msg) {
         try {
             System.out.println("Broadcasting -- " + msg);
             synchronized (clientList) {
                 for (ClientConnectionData c : clientList){
-                    if (c.getUserName()!=null && !c.getUserName().equals(client.getUserName()) && c.getRoom().equals(client.getRoom()))
-                        c.getOut().println(msg);
+                    if (c.getUserName() != null && !c.getUserName().equals(client.getUserName()) && c.getRoom().equals(client.getRoom()))
+                        c.getOut().writeObject(msg);
+                    client.getOut().flush();
                 }
             }
         } catch (Exception ex) {
@@ -97,12 +106,15 @@ public class ServerClientHandler implements Runnable {
     /**
      * Broadcasts a message to one other client connected to the server.
      */
-    public void whisper(String msg, ClientConnectionData usr) {
+    public void whisper(ChatMessage msg, ArrayList<ClientConnectionData> users) {
         try {
-            assert usr != null;
-            assert usr.getUserName()!=null;
-            System.out.println("Whispering to " + usr.getUserName() + " -- " + msg);
-            usr.getOut().println(msg);
+            for (ClientConnectionData user : users) {
+                assert user != null;
+                assert user.getUserName() != null;
+                System.out.println("Whispering to " + user.getUserName() + " -- " + msg);
+                user.getOut().writeObject(msg);
+                client.getOut().flush();
+            }
         } catch (AssertionError ex) {
             System.out.println("That user does not exist.");
         } catch (Exception ex) {
@@ -111,7 +123,7 @@ public class ServerClientHandler implements Runnable {
         }
     }
 
-    public void naming(String userName){
+    public void naming(String userName) {
         try {
             client.setUserName(null);
             boolean nameValidity = false;
@@ -132,66 +144,66 @@ public class ServerClientHandler implements Runnable {
                 }
 
                 if (!nameValidity) {
-                    client.getOut().println("SUBMITNAME");
+                    client.getOut().writeObject("SUBMITNAME");
+                    client.getOut().flush();
                     userName = client.getInput().readLine();
                     userName = userName.substring(ChatServer.NAME.length());
                     userName = userName.trim();
                 } else {
                     client.setUserName(userName);
-                    client.getOut().println("ACCEPT " + userName);
+                    client.getOut().writeObject("ACCEPT " + userName);
+                    client.getOut().flush();
                 }
             }
-        }catch (IOException e) {
-            System.out.println("naming failed");
+        } catch (IOException e) {
+            System.out.println("Naming failed!");
             userName = client.getName();
             client.setUserName(userName);
-            client.getOut().println("ACCEPT " + userName);
+            try {
+                client.getOut().writeObject("ACCEPT " + userName);
+                client.getOut().flush();
+            } catch (IOException ignored){}
         }
     }
 
     @Override
     public void run() {
         try {
-            BufferedReader in = client.getInput();
+            ObjectInputStream in = client.getInput();
             //TODO: get userName, first message from user
             naming(null);
             //notify all that client has joined
-            broadcast(String.format("WELCOME %s", client.getUserName()));
+            broadcast(new ChatMessage(ChatServer.WELCOME, client.getUserName()));
 
-            String incoming;
-            while( (incoming = in.readLine()) != null) {
-                System.out.println(incoming);
-                if (incoming.startsWith(ChatServer.CHAT)) {
-                    String chat = incoming.substring(4).trim();
-                    if (chat.length() > 0) {
-                        String msg = String.format("CHAT %s %s", client.getUserName(), chat);
-                        broadcast(msg);
-                    }
-                } else if (incoming.startsWith(ChatServer.PCHAT)) {
-                    String chat = incoming.substring(5).trim();
-                    String name = chat.split(" ")[0];
-                    String content = chat.substring(name.length()).trim();
-                    if (content.length() > 0) {
-                        String msg = String.format("PCHAT %s %s", client.getUserName(), content);
-                        for (ClientConnectionData c : clientList) {
-                            if (c.getUserName().equals(name)) {
-                                whisper(msg, c);
-                                break;
-                            }
+            ChatMessage incoming;
+            while( (incoming = (ChatMessage) in.readObject()) != null) {
+                String msgHeader = incoming.getMsgHeader();
+                String clientMsg = incoming.getMessage();
+
+                System.out.printf("%s %s %s\n",
+                        msgHeader, incoming.getRecipients().toString(), clientMsg);
+
+                if (msgHeader.equals(ChatServer.CHAT)) {
+                    ChatMessage msg = new ChatMessage(ChatServer.CHAT, String.format("%s %s", client.getUserName(), clientMsg));
+                    broadcast(msg);
+                } else if (msgHeader.equals(ChatServer.PCHAT)) {
+                    ChatMessage msg = new ChatMessage(ChatServer.PCHAT, String.format("%s %s", client.getUserName(), clientMsg));
+                    ArrayList<ClientConnectionData> recipients = new ArrayList<>();
+                    for (ClientConnectionData c : clientList) {
+                        if (incoming.getRecipients().contains(c.getUserName())) {
+                            recipients.add(c);
                         }
                     }
-                } else if(incoming.startsWith(ChatServer.NAME)){
-                    naming(incoming.substring(ChatServer.NAME.length()).trim());
-                } else if (incoming.startsWith(ChatServer.JOIN_ROOM)) {
-                    String room = incoming.substring(9).trim();
-                    if (room.length() > 0) {
-                        joinRoom(room);
-                    }
-                } else if (incoming.startsWith(ChatServer.LEAVE_ROOM)) {
+                    whisper(msg, recipients);
+                } else if(msgHeader.equals(ChatServer.NAME)){
+                    naming(clientMsg);
+                } else if (msgHeader.equals(ChatServer.JOIN_ROOM)) {
+                    joinRoom(clientMsg);
+                } else if (msgHeader.equals(ChatServer.LEAVE_ROOM)) {
                     leaveRoom();
-                } else if (incoming.startsWith(ChatServer.LIST)) {
+                } else if (msgHeader.equals(ChatServer.LIST)) {
                     listRooms();
-                } else if (incoming.startsWith(ChatServer.QUIT)){
+                } else if (msgHeader.equals(ChatServer.QUIT)){
                     break;
                 }
             }
@@ -210,7 +222,7 @@ public class ServerClientHandler implements Runnable {
                 clientList.remove(client);
             }
             System.out.println(client.getName() + " has left.");
-            broadcast(String.format("%s %s",ChatServer.QUIT, client.getUserName()));
+            broadcast(new ChatMessage(ChatServer.QUIT, client.getUserName()));
             try {
                 client.getSocket().close();
             } catch (IOException ignored) {}
