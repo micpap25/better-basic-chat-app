@@ -20,6 +20,8 @@ public class ChatServer {
     public static final String LEAVE_ROOM = "LEAVE_ROOM";
     public static final String LIST = "LIST";
     public static final String NAME = "NAME";
+    public static final String ROSTER = "ROSTER";
+
 
     public static void main(String[] args) throws Exception {
         ExecutorService pool = Executors.newFixedThreadPool(100);

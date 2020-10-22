@@ -58,6 +58,7 @@ public class ServerClientHandler implements Runnable {
                     client.getOut().flush();
                 }
             }
+            sendRoster(false,true,false);
         } catch (Exception ex) {
             System.out.println("join_room caught exception: " + ex);
             ex.printStackTrace();
@@ -71,14 +72,15 @@ public class ServerClientHandler implements Runnable {
         try {
             System.out.println(client.getUserName() + " leaving room " + client.getRoom());
             String room = client.getRoom();
-            client.setRoom("");
             for (ClientConnectionData c : clientList) {
-                if (c.getRoom().equals(room)) {
+                if (c.getRoom().equals(room) && !c.getUserName().equals(client.getUserName())) {
                     //TODO: check if we need this extra newline?
                     c.getOut().writeObject(new ChatMessage(ChatServer.LEAVE_ROOM, client.getUserName() + "\n"));
                     client.getOut().flush();
                 }
             }
+            sendRoster(false,false,true);
+            client.setRoom("");
         } catch (Exception ex) {
             System.out.println("leave_room caught exception: " + ex);
             ex.printStackTrace();
@@ -89,12 +91,12 @@ public class ServerClientHandler implements Runnable {
      * other than the message sender connected to the server.
      * If the client is in a room, broadcasts to those in the room instead.
      */
-    public void broadcast(ChatMessage msg) {
+    public void broadcast(ChatMessage msg, boolean allRooms) {
         try {
             System.out.println("Broadcasting -- " + msg.getMessage());
             synchronized (clientList) {
                 for (ClientConnectionData c : clientList){
-                    if (c.getUserName() != null && !c.getUserName().equals(client.getUserName()) && c.getRoom().equals(client.getRoom())) {
+                    if (c.getUserName() != null && !c.getUserName().equals(client.getUserName()) && (allRooms || c.getRoom().equals(client.getRoom()))) {
                         c.getOut().writeObject(msg);
                         client.getOut().flush();
                     }
@@ -167,15 +169,49 @@ public class ServerClientHandler implements Runnable {
             } catch (IOException ignored){}
         }
     }
+    private void sendRoster(boolean global,boolean privatesend,boolean leaving){
+        ChatMessage obj = null;
+        StringBuilder s = new StringBuilder();
+        StringBuilder k = new StringBuilder();
+        k.append("/");
 
+        for (ClientConnectionData c : clientList) {
+            if(leaving && c.getUserName().equals(client.getUserName())){
+                k.append(c.getUserName());
+                k.append(" ");
+            }
+            else if (c.getRoom().equals(client.getRoom())) {
+                s.append(c.getUserName());
+                s.append(" ");
+            }
+            else{
+                k.append(c.getUserName());
+                k.append(" ");
+            }
+        }
+        s.append(k);
+
+        obj = new ChatMessage(ChatServer.ROSTER, s.toString());
+
+        broadcast(obj, global);
+
+        if(privatesend){
+            try{
+               client.getOut().writeObject(obj);
+               client.getOut().flush();
+            }catch (IOException ex){
+                System.out.println("failed to send roster");
+            }
+        }
+    }
     @Override
     public void run() {
         try {
             ObjectInputStream in = client.getInput();
             naming(null);
             //notify all that client has joined
-            broadcast(new ChatMessage(ChatServer.WELCOME, client.getUserName()));
-
+            broadcast(new ChatMessage(ChatServer.WELCOME, client.getUserName()),true);
+            sendRoster(true,true,false);
             ChatMessage incoming;
             active:
             while( (incoming = (ChatMessage) in.readObject()) != null) {
@@ -188,7 +224,7 @@ public class ServerClientHandler implements Runnable {
                 switch (msgHeader) {
                     case ChatServer.CHAT: {
                         ChatMessage msg = new ChatMessage(ChatServer.CHAT, String.format("%s %s", client.getUserName(), clientMsg));
-                        broadcast(msg);
+                        broadcast(msg,false);
                         break;
                     }
                     case ChatServer.PCHAT: {
@@ -205,11 +241,16 @@ public class ServerClientHandler implements Runnable {
                     case ChatServer.NAME:
                         naming(clientMsg);
                         break;
+                    case ChatServer.ROSTER:
+                        sendRoster(false,true,false);
+                        break;
                     case ChatServer.JOIN_ROOM:
+                        leaveRoom();
                         joinRoom(clientMsg);
                         break;
                     case ChatServer.LEAVE_ROOM:
                         leaveRoom();
+                        joinRoom("");
                         break;
                     case ChatServer.LIST:
                         listRooms();
@@ -232,7 +273,8 @@ public class ServerClientHandler implements Runnable {
                 clientList.remove(client);
             }
             System.out.println(client.getName() + " has left.");
-            broadcast(new ChatMessage(ChatServer.QUIT, client.getUserName()));
+            broadcast(new ChatMessage(ChatServer.QUIT, client.getUserName()),true);
+            sendRoster(true,false,true);
             try {
                 client.getSocket().close();
             } catch (IOException ignored) {}

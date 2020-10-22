@@ -31,6 +31,9 @@ public class ServerListener implements Runnable {
                 String[] body= null;
                 if(incoming.getMessage()!=null){
                     body = incoming.getMessage().split(" ");
+                    for (int i =0; i<body.length;i++) {
+                        body[i]=body[i].strip();
+                    }
                 }
 
                 switch (info) {
@@ -54,13 +57,34 @@ public class ServerListener implements Runnable {
                         msg = body[0] + " has left the server";
                         break;
                     case ChatServer.LIST:
-                        StringBuilder k = new StringBuilder("\n-----ACTIVE ROOMS------");
+                        StringBuilder k = new StringBuilder("\n------ACTIVE ROOMS------");
                         k.append("\n");
                         for (int i = 1; i < body.length ; i++) {
                             k.append(body[i]);
                             k.append("\n");
                         }
                         msg = k.toString();
+                        break;
+                    case ChatServer.ROSTER:
+                        String[] roster = incoming.getMessage().split("/");
+                        String[] room = roster[0].split(" ");
+                        String[] server = {""};
+                        if(roster.length>1) {
+                            server = roster[1].split(" ");
+                        }
+                        System.out.println("---------Roster---------");
+                        System.out.printf("%-30s %-30s\n","ROOM",roster.length>1?"SERVER":"");
+                        for (int i = 0; i < server.length || i <room.length ; i++) {
+                            String serveruser ="";
+                            String roomuser ="";
+                            if(i<server.length) {
+                                serveruser = server[i];
+                            }
+                            if(i<room.length) {
+                                roomuser = room[i];
+                            }
+                            System.out.printf("%-30s %-30s\n",roomuser.trim(),serveruser.trim());
+                        }
                         break;
                     case ChatServer.JOIN_ROOM:
                         msg = body[0] + " has joined the room";

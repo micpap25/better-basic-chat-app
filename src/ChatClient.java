@@ -34,6 +34,9 @@ public class ChatClient {
         while (!line.toLowerCase().startsWith("/quit")) {
             line = userInput.nextLine().trim();
             ChatMessage msg = parse(line);
+            if(msg==null){
+                continue;
+            }
             out.writeObject(msg);
             out.flush();
         }
@@ -62,14 +65,19 @@ public class ChatClient {
             ArrayList<String> names = new ArrayList<>();
             int i =0;
             for (i = 0; i < temp.length ; i++) {
-                if(temp[i].contains("@")){
+                if(temp[i].startsWith("@")){
                     names.add(temp[i].substring("@".length()).trim());
                 }
                 else{
                     break;
                 }
             }
-            return new ChatMessage(ChatServer.PCHAT,temp[i],names);
+            StringBuilder newmsg = new StringBuilder();
+            for (i=i; i < temp.length ; i++) {
+                newmsg.append(temp[i]);
+            }
+
+            return new ChatMessage(ChatServer.PCHAT,newmsg.toString(),names);
         }
         else if (tempMsg.startsWith("/list")) {
             return new ChatMessage(ChatServer.LIST);
@@ -79,6 +87,9 @@ public class ChatClient {
         }
         else if (tempMsg.startsWith("/leave")) {
             return new ChatMessage(ChatServer.LEAVE_ROOM);
+        }
+        else if(tempMsg.startsWith("/whoishere")){
+            return new ChatMessage(ChatServer.ROSTER);
         }
         else {
             return new ChatMessage(ChatServer.CHAT, msg.trim());
