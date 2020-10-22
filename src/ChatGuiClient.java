@@ -299,12 +299,20 @@ public class ChatGuiClient extends Application {
         // Convert the result to a ServerInfo object when the login button is clicked.
         getServerDialog.setResultConverter(dialogButton -> {
             if (dialogButton == connectButtonType) {
-                return new ServerInfo(ipAddress.getText(), Integer.parseInt(port.getText()));
+                if(ipAddress.getText().equals("") || port.getText().equals("")){
+                    return null;
+                }
+                else {
+                    return new ServerInfo(ipAddress.getText(), Integer.parseInt(port.getText()));
+                }
             }
             return null;
         });
-
-        return getServerDialog.showAndWait();
+        Optional<ServerInfo> obj = getServerDialog.showAndWait();
+        while (obj.isEmpty()){
+            obj = getServerDialog.showAndWait();
+        }
+        return obj;
     }
 
     private String getName() {
