@@ -1,11 +1,12 @@
 import java.io.BufferedReader;
+import java.io.ObjectInputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ServerListener implements Runnable {
 
-    BufferedReader socketIn;
+    ObjectInputStream socketIn;
     AtomicBoolean naming;
-    public ServerListener(BufferedReader socketIn, AtomicBoolean naming) {
+    public ServerListener(ObjectInputStream socketIn, AtomicBoolean naming) {
         this.naming = naming;
         this.socketIn = socketIn;
     }
@@ -22,51 +23,81 @@ public class ServerListener implements Runnable {
     @Override
     public void run() {
         try {
-            String incoming;
-            while((incoming = socketIn.readLine()) != null) {
+            ChatMessage incoming;
+            while((incoming = (ChatMessage) socketIn.readObject()) != null) {
                 String msg = "";
                 //System.out.println(incoming);
-                String[] info = incoming.split(" ");
-                switch (info[0]) {
+                String info = incoming.getMsgHeader();
+                String[] body= null;
+                if(incoming.getMessage()!=null){
+                    body = incoming.getMessage().split(" ");
+                    for (int i =0; i<body.length;i++) {
+                        body[i]=body[i].strip();
+                    }
+                }
+
+                switch (info) {
                     case "SUBMITNAME":
                         msg = "Please choose a valid username";
                         break;
                     case "ACCEPT":
-                        msg = "Username set as: "+slice(info,1,info.length," ");
+                        msg = "Username set as: "+ body[0];
                         naming.set(false);
                         break;
                     case "WELCOME":
-                        msg = info[1] + " has joined";
+                        msg = body[0] + " has joined";
                         break;
                     case ChatServer.CHAT:
-                        msg = info[1] + ": " + slice(info,2,info.length," ");
+                        msg = body[0] + ": " + slice(body,1,body.length," ");
                         break;
                     case ChatServer.PCHAT:
-                        msg = info[1] + " (private): " + slice(info,2,info.length," ");
+                        msg = body[0] + " (private): " + slice(body,1,body.length," ");;
                         break;
                     case ChatServer.QUIT:
-                        msg = info[1] + " has left the server";
+                        msg = body[0] + " has left the server";
                         break;
                     case ChatServer.LIST:
-                        StringBuilder k = new StringBuilder("\n-----ACTIVE ROOMS------");
+                        StringBuilder k = new StringBuilder("\n------ACTIVE ROOMS------");
                         k.append("\n");
-                        for (int i = 1; i < info.length ; i++) {
-                            k.append(info[i]);
+                        for (int i = 1; i < body.length ; i++) {
+                            k.append(body[i]);
                             k.append("\n");
                         }
                         msg = k.toString();
                         break;
+                    case ChatServer.ROSTER:
+                        String[] roster = incoming.getMessage().split("/");
+                        String[] room = roster[0].split(" ");
+                        String[] server = {""};
+                        if(roster.length>1) {
+                            server = roster[1].split(" ");
+                        }
+                        System.out.println("---------Roster---------");
+                        System.out.printf("%-30s %-30s\n","ROOM",roster.length>1?"SERVER":"");
+                        for (int i = 0; i < server.length || i <room.length ; i++) {
+                            String serveruser ="";
+                            String roomuser ="";
+                            if(i<server.length) {
+                                serveruser = server[i];
+                            }
+                            if(i<room.length) {
+                                roomuser = room[i];
+                            }
+                            System.out.printf("%-30s %-30s\n",roomuser.trim(),serveruser.trim());
+                        }
+                        break;
                     case ChatServer.JOIN_ROOM:
-                        msg = info[1] + " has joined the room";
+                        msg = body[0] + " has joined the room";
                         break;
                     case ChatServer.LEAVE_ROOM:
-                        msg = info[1] + " has left the room";
+                        msg = body[0] + " has left the room";
                         break;
                 }
 
                 System.out.println(msg);
             }
         } catch (Exception ex) {
+            ex.printStackTrace();
             System.out.println("Exception caught in listener - " + ex);
         } finally{
             System.out.println("Client Listener exiting");
