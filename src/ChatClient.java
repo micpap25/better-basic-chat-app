@@ -75,6 +75,7 @@ public class ChatClient {
             StringBuilder newmsg = new StringBuilder();
             for (i=i; i < temp.length ; i++) {
                 newmsg.append(temp[i]);
+                newmsg.append(" ");
             }
 
             return new ChatMessage(ChatServer.PCHAT,newmsg.toString(),names);
