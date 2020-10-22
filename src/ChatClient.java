@@ -78,7 +78,7 @@ public class ChatClient {
                 newmsg.append(" ");
             }
 
-            return new ChatMessage(ChatServer.PCHAT,newmsg.toString(),names);
+            return new ChatMessage(ChatServer.PCHAT,newmsg.toString().trim(),names);
         }
         else if (tempMsg.startsWith("/list")) {
             return new ChatMessage(ChatServer.LIST);
