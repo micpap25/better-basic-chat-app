@@ -24,8 +24,7 @@ public class ServerListener implements Runnable {
     public void run() {
         try {
             ChatMessage incoming;
-            while((incoming = (ChatMessage)socketIn.readObject()) != null) {
-                System.out.println("here");
+            while((incoming = (ChatMessage) socketIn.readObject()) != null) {
                 String msg = "";
                 //System.out.println(incoming);
                 String info = incoming.getMsgHeader();

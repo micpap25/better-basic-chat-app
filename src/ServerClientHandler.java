@@ -91,7 +91,7 @@ public class ServerClientHandler implements Runnable {
      */
     public void broadcast(ChatMessage msg) {
         try {
-            System.out.println("Broadcasting -- " + msg);
+            System.out.println("Broadcasting -- " + msg.getMessage());
             synchronized (clientList) {
                 for (ClientConnectionData c : clientList){
                     if (c.getUserName() != null && !c.getUserName().equals(client.getUserName()) && c.getRoom().equals(client.getRoom())) {
@@ -114,7 +114,7 @@ public class ServerClientHandler implements Runnable {
             for (ClientConnectionData user : users) {
                 assert user != null;
                 assert user.getUserName() != null;
-                System.out.println("Whispering to " + user.getUserName() + " -- " + msg);
+                System.out.println("Whispering to " + user.getUserName() + " -- " + msg.getMessage());
                 user.getOut().writeObject(msg);
                 client.getOut().flush();
             }
@@ -181,10 +181,10 @@ public class ServerClientHandler implements Runnable {
             while( (incoming = (ChatMessage) in.readObject()) != null) {
                 String msgHeader = incoming.getMsgHeader();
                 String clientMsg = incoming.getMessage();
-
-                System.out.printf("%s %s\n",
-                        msgHeader, clientMsg);
-
+                if (msgHeader.equals(ChatServer.PCHAT))
+                    System.out.printf("%s %s %s\n", msgHeader, incoming.getRecipients().toString(), clientMsg);
+                else
+                    System.out.printf("%s %s\n", msgHeader, clientMsg);
                 switch (msgHeader) {
                     case ChatServer.CHAT: {
                         ChatMessage msg = new ChatMessage(ChatServer.CHAT, String.format("%s %s", client.getUserName(), clientMsg));
