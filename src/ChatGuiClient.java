@@ -1,9 +1,12 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -75,8 +78,8 @@ class ServerInfo {
 
 public class ChatGuiClient extends Application {
     static Socket socket;
-    static BufferedReader socketIn;
-    static PrintWriter out;
+    static ObjectOutputStream out;
+    static ObjectInputStream socketIn;
     static AtomicBoolean naming = new AtomicBoolean(true);
     
     Stage stage;
@@ -123,10 +126,24 @@ public class ChatGuiClient extends Application {
         //At first, can't send messages - wait for WELCOME!
         textInput = new TextField();
         textInput.setEditable(false);
-        textInput.setOnAction(e -> sendMessage());
+        textInput.setOnAction(e -> {
+            try {
+                sendMessage();
+            } catch (IOException e2) {
+                // TODO Auto-generated catch block
+                e2.printStackTrace();
+            }
+        });
         sendButton = new Button("Send");
         sendButton.setDisable(true);
-        sendButton.setOnAction(e -> sendMessage());
+        sendButton.setOnAction(e -> {
+            try {
+                sendMessage();
+            } catch (IOException e2) {
+                // TODO Auto-generated catch block
+                e2.printStackTrace();
+            }
+        });
 
         HBox hbox = new HBox();
         hbox.getChildren().addAll(new Label("Message: "), textInput, sendButton);
@@ -140,14 +157,18 @@ public class ChatGuiClient extends Application {
         
         // Set up the socket for the Gui
         socket = new Socket(serverInfo.serverAddress, serverInfo.serverPort);
-        socketIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        out = new PrintWriter(socket.getOutputStream(), true);
+        socketIn = new ObjectInputStream(socket.getInputStream());
+        out = new ObjectOutputStream(socket.getOutputStream());
 
         ServerListener listener = new ServerListener(socketIn, naming);
         
         //Handle GUI closed event
         stage.setOnCloseRequest(e -> {
-            out.println("QUIT");
+            try {
+                out.writeObject(new ChatMessage(ChatServer.QUIT));
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
             listener.appRunning = false;
             try {
                 socket.close(); 
@@ -157,40 +178,67 @@ public class ChatGuiClient extends Application {
         new Thread(listener).start();
     }
 
-    private void sendMessage() {
+    private void sendMessage() throws IOException {
         String line = "";
         while (!line.toLowerCase().startsWith("/quit")) {
             line = textInput.getText().trim();
-            String msg = parse(line);
-            out.println(msg);
+            ChatMessage msg = parse(line);
+            if(msg==null){
+                continue;
+            }
+            out.writeObject(msg);
             textInput.clear();
+            out.flush();
         }
     }
 
-    public static String parse(String msg){
+    public static ChatMessage parse(String msg){
         String tempMsg = msg.toLowerCase();
-        if(msg.length()==0){
+        
+        if(msg.length() == 0){
             return null;
         }
-        if(naming.get()||tempMsg.startsWith("/name")){
+
+        if (naming.get() || tempMsg.startsWith("/name")) {
             naming.set(true);
             msg = msg.replace("/name","").trim();
-            return String.format("%s %s",ChatServer.NAME,msg);
+            return new ChatMessage(ChatServer.NAME, msg);
         }
-        if(tempMsg.charAt(0)=='@'){
-            return String.format("%s %s",ChatServer.PCHAT,msg.substring("@".length()).trim());
+
+        if (tempMsg.charAt(0)=='@') {
+            String[] temp = tempMsg.split(" ");
+            ArrayList<String> names = new ArrayList<>();
+            int i =0;
+            for (i = 0; i < temp.length ; i++) {
+                if(temp[i].startsWith("@")){
+                    names.add(temp[i].substring("@".length()).trim());
+                }
+                else{
+                    break;
+                }
+            }
+            StringBuilder newmsg = new StringBuilder();
+            for (i=i; i < temp.length ; i++) {
+                newmsg.append(temp[i]);
+                newmsg.append(" ");
+            }
+
+            return new ChatMessage(ChatServer.PCHAT,newmsg.toString().trim(),names);
         }
-        else if(tempMsg.startsWith("/list")){
-            return ChatServer.LIST;
+        else if (tempMsg.startsWith("/list")) {
+            return new ChatMessage(ChatServer.LIST);
         }
-        else if(tempMsg.startsWith("/join")){
-            return String.format("%s %s",ChatServer.JOIN_ROOM,msg.substring("/join".length()).trim());
+        else if(tempMsg.startsWith("/join")) {
+            return new ChatMessage(ChatServer.JOIN_ROOM, msg.substring("/join".length()).trim());
         }
-        else if (tempMsg.startsWith("/leave")){
-            return ChatServer.LEAVE_ROOM;
+        else if (tempMsg.startsWith("/leave")) {
+            return new ChatMessage(ChatServer.LEAVE_ROOM);
         }
-        else{
-            return String.format("%s %s",ChatServer.CHAT,msg.trim());
+        else if(tempMsg.startsWith("/whoishere")){
+            return new ChatMessage(ChatServer.ROSTER);
+        }
+        else {
+            return new ChatMessage(ChatServer.CHAT, msg.trim());
         }
     }
 
@@ -283,11 +331,11 @@ public class ChatGuiClient extends Application {
 
     class ServerListener implements Runnable {
 
-        BufferedReader socketIn;
-        volatile boolean appRunning = false;
+        ObjectInputStream socketIn;
         AtomicBoolean naming;
+        volatile boolean appRunning = true;
 
-        public ServerListener(BufferedReader socketIn, AtomicBoolean naming) {
+        public ServerListener(ObjectInputStream socketIn, AtomicBoolean naming) {
             this.naming = naming;
             this.socketIn = socketIn;
         }
@@ -300,87 +348,108 @@ public class ChatGuiClient extends Application {
             }
             return message.toString().trim();
         }
-
+    
+        @Override
         public void run() {
             try {
-                String incoming;
-
-                while((incoming = socketIn.readLine()) != null) {
+                appRunning = true;
+                ChatMessage incoming;
+                while((incoming = (ChatMessage) socketIn.readObject()) != null) {
                     String msg = "";
                     //System.out.println(incoming);
-                    String[] info = incoming.split(" ");
-                    switch (info[0]) {
+                    String info = incoming.getMsgHeader();
+                    String[] body= null;
+                    if(incoming.getMessage()!=null){
+                        body = incoming.getMessage().split(" ");
+                        for (int i =0; i<body.length;i++) {
+                            body[i]=body[i].strip();
+                        }
+                    }
+    
+                    switch (info) {
                         case "SUBMITNAME":
-                            Platform.runLater(() -> {
-                                out.println(getName());
-                            });
-                            //msg = "Please choose a valid username";
+                            getName();
+                            msg = "Please choose a valid username";
                             break;
                         case "ACCEPT":
-                            Platform.runLater(() -> {
-                                stage.setTitle("Chatter - " + username);
-                                textInput.setEditable(true);
-                                sendButton.setDisable(false);
-                                messageArea.appendText("Welcome to the chatroom, " + username + "!\n");
-                            });
-                            //msg = "Username set as: "+slice(info,1,info.length," ");
+                            msg = "Username set as: "+ body[0];
                             naming.set(false);
                             break;
                         case "WELCOME":
-                            Platform.runLater(() -> {
-                                messageArea.appendText(username + " has joined the chatroom.\n");
-                            });
-                            msg = info[1] + " has joined";
+                            msg = body[0] + " has joined";
                             break;
                         case ChatServer.CHAT:
-                            msg = info[1] + ": " + slice(info,2,info.length," ");
+                            msg = body[0] + ": " + slice(body,1,body.length," ");
                             break;
                         case ChatServer.PCHAT:
-                            msg = info[1] + " (private): " + slice(info,2,info.length," ");
+                            msg = body[0] + " (private): " + slice(body,1,body.length," ");;
                             break;
                         case ChatServer.QUIT:
-                            msg = info[1] + " has left the server";
+                            msg = body[0] + " has left the server";
                             break;
                         case ChatServer.LIST:
-                            StringBuilder k = new StringBuilder("\n-----ACTIVE ROOMS------");
+                            StringBuilder k = new StringBuilder("\n------ACTIVE ROOMS------");
                             k.append("\n");
-                            for (int i = 1; i < info.length ; i++) {
-                                k.append(info[i]);
+                            for (int i = 1; i < body.length ; i++) {
+                                k.append(body[i]);
                                 k.append("\n");
                             }
                             msg = k.toString();
                             break;
+                        case ChatServer.ROSTER:
+                            String[] roster = incoming.getMessage().split("/");
+                            String[] room = roster[0].split(" ");
+                            String[] server = {""};
+                            if(roster.length>1) {
+                                server = roster[1].split(" ");
+                            }
+                            System.out.println("---------Roster---------");
+                            System.out.printf("%-30s %-30s\n","ROOM",roster.length>1?"SERVER":"");
+                            for (int i = 0; i < server.length || i <room.length ; i++) {
+                                String serveruser ="";
+                                String roomuser ="";
+                                if(i<server.length) {
+                                    serveruser = server[i];
+                                }
+                                if(i<room.length) {
+                                    roomuser = room[i];
+                                }
+                                System.out.printf("%-30s %-30s\n",roomuser.trim(),serveruser.trim());
+                            }
+                            break;
                         case ChatServer.JOIN_ROOM:
-                            msg = info[1] + " has joined the room";
+                            msg = body[0] + " has joined the room";
                             break;
                         case ChatServer.LEAVE_ROOM:
-                            msg = info[1] + " has left the room";
+                            msg = body[0] + " has left the room";
                             break;
                     }
-                    if (!(msg.equals(null)))
-                        System.out.println(msg);
+    
+                    System.out.println(msg);
                 }
             } catch (Exception ex) {
+                ex.printStackTrace();
                 System.out.println("Exception caught in listener - " + ex);
             } finally{
                 System.out.println("Client Listener exiting");
             }
-              /*  // Set up the socket for the Gui
+        }
+    }
+              /* // Set up the socket for the Gui
                 socket = new Socket(serverInfo.serverAddress, serverInfo.serverPort);
-                socketIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 out = new PrintWriter(socket.getOutputStream(), true);
                 
                 appRunning = true;
                 //Ask the gui to show the username dialog and update username
                 //Send to the server
-               
                 Platform.runLater(() -> {
                     out.println(getName());
                 });
 
                 //handle all kinds of incoming messages
                 String incoming = "";
-                while (appRunning && (incoming = socketIn.readLine()) != null) {
+                while (appRunning && (incoming = in.readLine()) != null) {
                     if (incoming.startsWith("WELCOME")) {
                         String user = incoming.substring(8);
                         //got welcomed? Now you can send messages!
@@ -411,25 +480,5 @@ public class ChatGuiClient extends Application {
                         Platform.runLater(() -> {
                             messageArea.appendText(user + "has left the chatroom.\n");
                         });
-                    }
-                }
-            } catch (UnknownHostException e) {
-                e.printStackTrace();
-            } catch (Exception e) {
-                if (appRunning)
-                    e.printStackTrace();
-            } 
-            finally {
-                Platform.runLater(() -> {
-                    stage.close();
-                });
-                try {
-                    if (socket != null)
-                        socket.close();
-                }
-                catch (IOException e){
-                }
-            } */
-        }
-    }
+                    } */
 }
