@@ -24,7 +24,7 @@ public class ChatClient {
         out = new PrintWriter(socket.getOutputStream(), true);
 
         // start a thread to listen for server messages
-        ServerListener listener = new ServerListener(socketIn,naming);
+        ServerListener listener = new ServerListener(socketIn, naming);
         Thread t = new Thread(listener);
         t.start();
 
@@ -43,28 +43,31 @@ public class ChatClient {
 
     public static String parse(String msg){
         String tempMsg = msg.toLowerCase();
-        if(msg.length()==0){
+        
+        if(msg.length() == 0){
             return null;
         }
-        if(naming.get()||tempMsg.startsWith("/name")){
+
+        if (naming.get() || tempMsg.startsWith("/name")) {
             naming.set(true);
             msg = msg.replace("/name","").trim();
-            return String.format("%s %s",ChatServer.NAME,msg);
+            return String.format("%s %s", ChatServer.NAME,msg);
         }
-        if(tempMsg.charAt(0)=='@'){
-            return String.format("%s %s",ChatServer.PCHAT,msg.substring("@".length()).trim());
+
+        if (tempMsg.charAt(0)=='@') {
+            return String.format("%s %s", ChatServer.PCHAT, msg.substring("@".length()).trim());
         }
-        else if(tempMsg.startsWith("/list")){
+        else if (tempMsg.startsWith("/list")) {
             return ChatServer.LIST;
         }
-        else if(tempMsg.startsWith("/join")){
-            return String.format("%s %s",ChatServer.JOIN_ROOM,msg.substring("/join".length()).trim());
+        else if(tempMsg.startsWith("/join")) {
+            return String.format("%s %s", ChatServer.JOIN_ROOM, msg.substring("/join".length()).trim());
         }
-        else if (tempMsg.startsWith("/leave")){
+        else if (tempMsg.startsWith("/leave")) {
             return ChatServer.LEAVE_ROOM;
         }
-        else{
-            return String.format("%s %s",ChatServer.CHAT,msg.trim());
+        else {
+            return String.format("%s %s", ChatServer.CHAT, msg.trim());
         }
     }
 }
