@@ -24,17 +24,22 @@ public class ServerListener implements Runnable {
     public void run() {
         try {
             ChatMessage incoming;
-            while((incoming = (ChatMessage) socketIn.readObject()) != null) {
+            while((incoming = (ChatMessage)socketIn.readObject()) != null) {
+                System.out.println("here");
                 String msg = "";
                 //System.out.println(incoming);
                 String info = incoming.getMsgHeader();
-                String[] body = incoming.getMessage().split(" ");
+                String[] body= null;
+                if(incoming.getMessage()!=null){
+                    body = incoming.getMessage().split(" ");
+                }
+
                 switch (info) {
                     case "SUBMITNAME":
                         msg = "Please choose a valid username";
                         break;
                     case "ACCEPT":
-                        msg = "Username set as: " + body[0];
+                        msg = "Username set as: "+ body[0];
                         naming.set(false);
                         break;
                     case "WELCOME":
@@ -69,8 +74,8 @@ public class ServerListener implements Runnable {
                 System.out.println(msg);
             }
         } catch (Exception ex) {
-            System.out.println("Exception caught in listener - " + ex);
             ex.printStackTrace();
+            System.out.println("Exception caught in listener - " + ex);
         } finally{
             System.out.println("Client Listener exiting");
         }

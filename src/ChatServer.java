@@ -36,9 +36,9 @@ public class ChatServer {
                     System.out.printf("Connected to %s:%d on local port %d\n",
                         socket.getInetAddress(), socket.getPort(), socket.getLocalPort());
 
-                    ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-                    ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
 
+                    ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+                    ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
                     String name = socket.getInetAddress().getHostName();
 
                     ClientConnectionData client = new ClientConnectionData(socket, in, out, name);

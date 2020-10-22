@@ -19,8 +19,11 @@ public class ChatClient {
         userInput.nextLine();
 
         socket = new Socket(serverip, port);
-        socketIn = new ObjectInputStream(socket.getInputStream());
+
+
         out = new ObjectOutputStream(socket.getOutputStream());
+        socketIn = new ObjectInputStream(socket.getInputStream());
+
 
         // start a thread to listen for server messages
         ServerListener listener = new ServerListener(socketIn, naming);

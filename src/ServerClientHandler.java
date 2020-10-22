@@ -94,9 +94,10 @@ public class ServerClientHandler implements Runnable {
             System.out.println("Broadcasting -- " + msg);
             synchronized (clientList) {
                 for (ClientConnectionData c : clientList){
-                    if (c.getUserName() != null && !c.getUserName().equals(client.getUserName()) && c.getRoom().equals(client.getRoom()))
+                    if (c.getUserName() != null && !c.getUserName().equals(client.getUserName()) && c.getRoom().equals(client.getRoom())) {
                         c.getOut().writeObject(msg);
-                    client.getOut().flush();
+                        client.getOut().flush();
+                    }
                 }
             }
         } catch (Exception ex) {
@@ -181,8 +182,8 @@ public class ServerClientHandler implements Runnable {
                 String msgHeader = incoming.getMsgHeader();
                 String clientMsg = incoming.getMessage();
 
-                System.out.printf("%s %s %s\n",
-                        msgHeader, incoming.getRecipients().toString(), clientMsg);
+                System.out.printf("%s %s\n",
+                        msgHeader, clientMsg);
 
                 switch (msgHeader) {
                     case ChatServer.CHAT: {
