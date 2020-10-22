@@ -22,4 +22,18 @@ public class ChatMessage implements Serializable {
         this.message = message;
         this.recipients = recipients;
     }
+
+    public String getMsgHeader() {
+        return msgHeader;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+
+    public ArrayList<String> getRecipients() {
+        return recipients;
+    }
+
 }
