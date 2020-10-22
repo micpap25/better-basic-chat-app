@@ -87,7 +87,7 @@ public class ServerClientHandler implements Runnable {
     /**
      * Broadcasts a message to all clients
      * other than the message sender connected to the server.
-     * If the client is in a room, braodcasts to those in the room instead.
+     * If the client is in a room, broadcasts to those in the room instead.
      */
     public void broadcast(ChatMessage msg) {
         try {
