@@ -11,6 +11,8 @@ public class ChatServer {
     private static final ArrayList<ClientConnectionData> clientList = new ArrayList<>();
 
     public static final String WELCOME = "WELCOME";
+    public static final String SUBMITNAME = "SUBMITNAME";
+    public static final String ACCEPT = "ACCEPT";
     public static final String CHAT = "CHAT";
     public static final String PCHAT = "PCHAT";
     public static final String QUIT = "QUIT";

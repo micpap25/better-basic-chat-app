@@ -7,6 +7,8 @@ import java.util.HashSet;
 //TODO: Change all the "writeObjects" to actually send objects
 //Make sure you trim stuff before sending it
 
+//New exception to be aware of is ClassNotFound exceptions with readObject()
+
 public class ServerClientHandler implements Runnable {
 
     // Maintain data about the client serviced by this thread
@@ -31,11 +33,11 @@ public class ServerClientHandler implements Runnable {
                     rooms.add(c.getRoom());
                 }
             }
-            StringBuilder sb = new StringBuilder(ChatServer.LIST + " ");
+            StringBuilder roomList = new StringBuilder();
             for (String s : rooms) {
-                sb.append(s.trim()).append(" ");
+                roomList.append(s.trim()).append(" ");
             }
-            client.getOut().writeObject(sb.toString());
+            client.getOut().writeObject(new ChatMessage(ChatServer.LIST, roomList.toString()));
             client.getOut().flush();
         } catch (Exception ex) {
             System.out.println("listing caught exception: " + ex);
@@ -51,7 +53,8 @@ public class ServerClientHandler implements Runnable {
             client.setRoom(room);
             for (ClientConnectionData c : clientList) {
                 if (c.getRoom().equals(room)) {
-                    c.getOut().writeObject(String.format("%s %s\n", ChatServer.JOIN_ROOM, client.getUserName()));
+                    //TODO: check if we need this extra newline?
+                    c.getOut().writeObject(new ChatMessage(ChatServer.JOIN_ROOM, client.getUserName() + "\n"));
                     client.getOut().flush();
                 }
             }
@@ -71,7 +74,8 @@ public class ServerClientHandler implements Runnable {
             client.setRoom("");
             for (ClientConnectionData c : clientList) {
                 if (c.getRoom().equals(room)) {
-                    c.getOut().writeObject(String.format("%s %s\n", ChatServer.LEAVE_ROOM, client.getUserName()));
+                    //TODO: check if we need this extra newline?
+                    c.getOut().writeObject(new ChatMessage(ChatServer.LEAVE_ROOM, client.getUserName() + "\n"));
                     client.getOut().flush();
                 }
             }
@@ -142,18 +146,17 @@ public class ServerClientHandler implements Runnable {
                 }
 
                 if (!nameValidity) {
-                    client.getOut().writeObject("SUBMITNAME");
+                    client.getOut().writeObject(new ChatMessage(ChatServer.SUBMITNAME));
                     client.getOut().flush();
-                    userName = client.getInput().readLine();
-                    userName = userName.substring(ChatServer.NAME.length());
-                    userName = userName.trim();
+                    ChatMessage nameSubmission = (ChatMessage) client.getInput().readObject();
+                    userName = nameSubmission.getMessage();
                 } else {
                     client.setUserName(userName);
-                    client.getOut().writeObject("ACCEPT " + userName);
+                    client.getOut().writeObject(new ChatMessage(ChatServer.ACCEPT, userName));
                     client.getOut().flush();
                 }
             }
-        } catch (IOException e) {
+        } catch (IOException | ClassNotFoundException e) {
             System.out.println("Naming failed!");
             userName = client.getName();
             client.setUserName(userName);
@@ -168,7 +171,6 @@ public class ServerClientHandler implements Runnable {
     public void run() {
         try {
             ObjectInputStream in = client.getInput();
-            //TODO: get userName, first message from user
             naming(null);
             //notify all that client has joined
             broadcast(new ChatMessage(ChatServer.WELCOME, client.getUserName()));
