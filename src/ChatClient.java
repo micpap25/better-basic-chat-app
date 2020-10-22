@@ -51,7 +51,7 @@ public class ChatClient {
         if (naming.get() || tempMsg.startsWith("/name")) {
             naming.set(true);
             msg = msg.replace("/name","").trim();
-            return new ChatMessage(ChatServer.NAME,msg);
+            return new ChatMessage(ChatServer.NAME, msg);
         }
 
         if (tempMsg.charAt(0)=='@') {
