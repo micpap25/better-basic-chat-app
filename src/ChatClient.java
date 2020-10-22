@@ -6,8 +6,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ChatClient {
     private static Socket socket;
-    private static ObjectInputStream socketIn;
     private static ObjectOutputStream out;
+    private static ObjectInputStream socketIn;
     private static AtomicBoolean naming = new AtomicBoolean(true);
     public static void main(String[] args) throws Exception {
         Scanner userInput = new Scanner(System.in);
