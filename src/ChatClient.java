@@ -26,7 +26,7 @@ public class ChatClient {
 
 
         // start a thread to listen for server messages
-        ServerListener listener = new ServerListener(socketIn, naming);
+        ServerListener listener = new ServerListener(socketIn, naming, System.out::println);
         Thread t = new Thread(listener);
         t.start();
 

@@ -160,8 +160,10 @@ public class ChatGuiClient extends Application {
         socketIn = new ObjectInputStream(socket.getInputStream());
         out = new ObjectOutputStream(socket.getOutputStream());
 
-        ServerListener listener = new ServerListener(socketIn, naming);
-        
+        ServerListener listener = new ServerListener(socketIn, naming, i -> System.out.println());
+
+
+
         //Handle GUI closed event
         stage.setOnCloseRequest(e -> {
             try {
@@ -182,7 +184,7 @@ public class ChatGuiClient extends Application {
         String line = "";
         while (!line.toLowerCase().startsWith("/quit")) {
             line = textInput.getText().trim();
-            ChatMessage msg = parse(line);
+            ChatMessage msg = ChatClient.parse(line);
             if(msg==null){
                 continue;
             }
@@ -192,55 +194,6 @@ public class ChatGuiClient extends Application {
         }
     }
 
-    public static ChatMessage parse(String msg){
-        String tempMsg = msg.toLowerCase();
-        
-        if(msg.length() == 0){
-            return null;
-        }
-
-        if (naming.get() || tempMsg.startsWith("/name")) {
-            naming.set(true);
-            msg = msg.replace("/name","").trim();
-            return new ChatMessage(ChatServer.NAME, msg);
-        }
-
-        if (tempMsg.charAt(0)=='@') {
-            String[] temp = tempMsg.split(" ");
-            ArrayList<String> names = new ArrayList<>();
-            int i =0;
-            for (i = 0; i < temp.length ; i++) {
-                if(temp[i].startsWith("@")){
-                    names.add(temp[i].substring("@".length()).trim());
-                }
-                else{
-                    break;
-                }
-            }
-            StringBuilder newmsg = new StringBuilder();
-            for (i=i; i < temp.length ; i++) {
-                newmsg.append(temp[i]);
-                newmsg.append(" ");
-            }
-
-            return new ChatMessage(ChatServer.PCHAT,newmsg.toString().trim(),names);
-        }
-        else if (tempMsg.startsWith("/list")) {
-            return new ChatMessage(ChatServer.LIST);
-        }
-        else if(tempMsg.startsWith("/join")) {
-            return new ChatMessage(ChatServer.JOIN_ROOM, msg.substring("/join".length()).trim());
-        }
-        else if (tempMsg.startsWith("/leave")) {
-            return new ChatMessage(ChatServer.LEAVE_ROOM);
-        }
-        else if(tempMsg.startsWith("/whoishere")){
-            return new ChatMessage(ChatServer.ROSTER);
-        }
-        else {
-            return new ChatMessage(ChatServer.CHAT, msg.trim());
-        }
-    }
 
     private Optional<ServerInfo> getServerIpAndPort() {
         // In a more polished product, we probably would have the ip /port hardcoded
@@ -337,112 +290,6 @@ public class ChatGuiClient extends Application {
         return username;
     }
 
-    class ServerListener implements Runnable {
-
-        ObjectInputStream socketIn;
-        AtomicBoolean naming;
-        volatile boolean appRunning = true;
-
-        public ServerListener(ObjectInputStream socketIn, AtomicBoolean naming) {
-            this.naming = naming;
-            this.socketIn = socketIn;
-        }
-    
-        private String slice(String[] array,int start,int end,String insert){
-            StringBuilder message = new StringBuilder();
-            for (int i = start; i < end || i<array.length; i++) {
-                message.append(insert);
-                message.append(array[i]);
-            }
-            return message.toString().trim();
-        }
-    
-        @Override
-        public void run() {
-            try {
-                appRunning = true;
-                ChatMessage incoming;
-                while((incoming = (ChatMessage) socketIn.readObject()) != null) {
-                    String msg = "";
-                    //System.out.println(incoming);
-                    String info = incoming.getMsgHeader();
-                    String[] body= null;
-                    if(incoming.getMessage()!=null){
-                        body = incoming.getMessage().split(" ");
-                        for (int i =0; i<body.length;i++) {
-                            body[i]=body[i].strip();
-                        }
-                    }
-    
-                    switch (info) {
-                        case "SUBMITNAME":
-                            getName();
-                            msg = "Please choose a valid username";
-                            break;
-                        case "ACCEPT":
-                            msg = "Username set as: "+ body[0];
-                            naming.set(false);
-                            break;
-                        case "WELCOME":
-                            msg = body[0] + " has joined";
-                            break;
-                        case ChatServer.CHAT:
-                            msg = body[0] + ": " + slice(body,1,body.length," ");
-                            break;
-                        case ChatServer.PCHAT:
-                            msg = body[0] + " (private): " + slice(body,1,body.length," ");
-                            break;
-                        case ChatServer.QUIT:
-                            msg = body[0] + " has left the server";
-                            break;
-                        case ChatServer.LIST:
-                            StringBuilder k = new StringBuilder("\n------ACTIVE ROOMS------");
-                            k.append("\n");
-                            for (int i = 1; i < body.length ; i++) {
-                                k.append(body[i]);
-                                k.append("\n");
-                            }
-                            msg = k.toString();
-                            break;
-                        case ChatServer.ROSTER:
-                            String[] roster = incoming.getMessage().split("/");
-                            String[] room = roster[0].split(" ");
-                            String[] server = {""};
-                            if(roster.length>1) {
-                                server = roster[1].split(" ");
-                            }
-                            System.out.println("---------Roster---------");
-                            System.out.printf("%-30s %-30s\n","ROOM",roster.length>1?"SERVER":"");
-                            for (int i = 0; i < server.length || i <room.length ; i++) {
-                                String serveruser ="";
-                                String roomuser ="";
-                                if(i<server.length) {
-                                    serveruser = server[i];
-                                }
-                                if(i<room.length) {
-                                    roomuser = room[i];
-                                }
-                                System.out.printf("%-30s %-30s\n",roomuser.trim(),serveruser.trim());
-                            }
-                            break;
-                        case ChatServer.JOIN_ROOM:
-                            msg = body[0] + " has joined the room";
-                            break;
-                        case ChatServer.LEAVE_ROOM:
-                            msg = body[0] + " has left the room";
-                            break;
-                    }
-    
-                    System.out.println(msg);
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                System.out.println("Exception caught in listener - " + ex);
-            } finally{
-                System.out.println("Client Listener exiting");
-            }
-        }
-    }
               /* // Set up the socket for the Gui
                 socket = new Socket(serverInfo.serverAddress, serverInfo.serverPort);
                 in = new BufferedReader(new InputStreamReader(socket.getInputStream()));

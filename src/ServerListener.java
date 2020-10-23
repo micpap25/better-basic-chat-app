@@ -1,13 +1,18 @@
 import java.io.ObjectInputStream;
+import java.lang.invoke.SerializedLambda;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 public class ServerListener implements Runnable {
 
     ObjectInputStream socketIn;
     AtomicBoolean naming;
-    public ServerListener(ObjectInputStream socketIn, AtomicBoolean naming) {
+    Consumer<String> l;
+    public volatile boolean appRunning = true;
+    public ServerListener(ObjectInputStream socketIn, AtomicBoolean naming, Consumer<String> l) {
         this.naming = naming;
         this.socketIn = socketIn;
+        this.l = l;
     }
 
     private String slice(String[] array, int start, int end, String insert){
@@ -95,7 +100,7 @@ public class ServerListener implements Runnable {
                         break;
                 }
 
-                System.out.println(msg);
+                l.accept(msg);
             }
         } catch (Exception ex) {
             ex.printStackTrace();
