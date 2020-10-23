@@ -170,7 +170,7 @@ public class ServerClientHandler implements Runnable {
         }
     }
     private void sendRoster(boolean global,boolean privatesend,boolean leaving){
-        ChatMessage obj = null;
+        ChatMessage obj;
         StringBuilder s = new StringBuilder();
         StringBuilder k = new StringBuilder();
         k.append("/");

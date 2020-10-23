@@ -63,7 +63,7 @@ public class ChatClient {
         if (tempMsg.charAt(0)=='@') {
             String[] temp = tempMsg.split(" ");
             ArrayList<String> names = new ArrayList<>();
-            int i =0;
+            int i;
             for (i = 0; i < temp.length ; i++) {
                 if(temp[i].startsWith("@")){
                     names.add(temp[i].substring("@".length()).trim());
@@ -73,7 +73,7 @@ public class ChatClient {
                 }
             }
             StringBuilder newmsg = new StringBuilder();
-            for (i=i; i < temp.length ; i++) {
+            for (; i < temp.length ; i++) {
                 newmsg.append(temp[i]);
                 newmsg.append(" ");
             }

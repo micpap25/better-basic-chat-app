@@ -1,4 +1,3 @@
-import java.io.BufferedReader;
 import java.io.ObjectInputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -11,7 +10,7 @@ public class ServerListener implements Runnable {
         this.socketIn = socketIn;
     }
 
-    private String slice(String[] array,int start,int end,String insert){
+    private String slice(String[] array, int start, int end, String insert){
         StringBuilder message = new StringBuilder();
         for (int i = start; i < end || i<array.length; i++) {
             message.append(insert);
@@ -28,13 +27,15 @@ public class ServerListener implements Runnable {
                 String msg = "";
                 //System.out.println(incoming);
                 String info = incoming.getMsgHeader();
-                String[] body= null;
+                String[] body = null;
                 if(incoming.getMessage()!=null){
                     body = incoming.getMessage().split(" ");
                     for (int i =0; i<body.length;i++) {
                         body[i]=body[i].strip();
                     }
                 }
+    
+                assert body != null;
 
                 switch (info) {
                     case "SUBMITNAME":
@@ -51,7 +52,7 @@ public class ServerListener implements Runnable {
                         msg = body[0] + ": " + slice(body,1,body.length," ");
                         break;
                     case ChatServer.PCHAT:
-                        msg = body[0] + " (private): " + slice(body,1,body.length," ");;
+                        msg = body[0] + " (private): " + slice(body,1,body.length," ");
                         break;
                     case ChatServer.QUIT:
                         msg = body[0] + " has left the server";

@@ -390,7 +390,7 @@ public class ChatGuiClient extends Application {
                             msg = body[0] + ": " + slice(body,1,body.length," ");
                             break;
                         case ChatServer.PCHAT:
-                            msg = body[0] + " (private): " + slice(body,1,body.length," ");;
+                            msg = body[0] + " (private): " + slice(body,1,body.length," ");
                             break;
                         case ChatServer.QUIT:
                             msg = body[0] + " has left the server";
