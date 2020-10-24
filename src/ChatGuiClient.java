@@ -255,7 +255,6 @@ public class ChatGuiClient extends Application {
                 ChatMessage incoming;
                 while((incoming = (ChatMessage) socketIn.readObject()) != null) {
                     String msg = "";
-                    //System.out.println(incoming);
                     String info = incoming.getMsgHeader();
                     String[] body = null;
                     if(incoming.getMessage()!=null){
@@ -307,8 +306,10 @@ public class ChatGuiClient extends Application {
                             if(roster.length>1) {
                                 server = roster[1].split(" ");
                             }
-                            System.out.println("---------Roster---------");
-                            System.out.printf("%-30s %-30s\n","ROOM",roster.length>1?"SERVER":"");
+                            Platform.runLater(() -> {
+                                messageArea.appendText("---------Roster---------\n");
+                                messageArea.appendText(String.format("%-30s %-30s\n","ROOM",roster.length>1?"SERVER":""));
+                            });
                             for (int i = 0; i < server.length || i <room.length ; i++) {
                                 String serveruser ="";
                                 String roomuser ="";
@@ -318,7 +319,12 @@ public class ChatGuiClient extends Application {
                                 if(i<room.length) {
                                     roomuser = room[i];
                                 }
-                                System.out.printf("%-30s %-30s\n",roomuser.trim(),serveruser.trim());
+
+                                String finalRoomuser = roomuser;
+                                String finalServeruser = serveruser;
+                                Platform.runLater(() -> {
+                                    messageArea.appendText(String.format("%-30s %-30s\n", finalRoomuser.trim(), finalServeruser.trim()));
+                                });
                             }
                             break;
                         case ChatServer.JOIN_ROOM:
@@ -341,8 +347,6 @@ public class ChatGuiClient extends Application {
                 System.out.println("Client Listener exiting");
             }
         }
-
-
 
         /*public void run() {
             try {
