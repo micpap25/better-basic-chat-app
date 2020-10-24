@@ -156,6 +156,11 @@ public class ChatGuiClient extends Application {
         textInput.clear();
         try {
             ChatMessage msg = parse(message);
+            if(!message.startsWith("/")) {
+                Platform.runLater(() -> {
+                    messageArea.appendText(username + ": "+message + "\n");
+                });
+            }
             out.writeObject(msg);
             out.flush();
         } catch (IOException e){
