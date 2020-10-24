@@ -271,6 +271,7 @@ public class ChatGuiClient extends Application {
                             break;
                         case "ACCEPT":
                             msg = "Username set as: " + body[0];
+                            username = body[0];
                             naming.set(false);
                             Platform.runLater(() -> {
                                 stage.setTitle("Chatter - " + username);
