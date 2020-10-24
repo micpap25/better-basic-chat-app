@@ -213,24 +213,6 @@ public class ChatGuiClient extends Application {
         return getServerDialog.showAndWait();
     }
 
-    private String getName(){
-        TextInputDialog nameDialog = new TextInputDialog();
-        nameDialog.setTitle("Enter Chat Name");
-        nameDialog.setHeaderText("Please enter your username.");
-        nameDialog.setContentText("Name: ");
-
-        while(username.equals("")) {
-            Optional<String> name = nameDialog.showAndWait();
-            if (!name.isPresent() || name.get().trim().equals(""))
-                nameDialog.setHeaderText("You must enter a nonempty name: ");
-            else if (name.get().trim().contains(" "))
-                nameDialog.setHeaderText("The name must have no spaces: ");
-            else
-                username = name.get().trim();
-        }
-        return username;
-    }
-
     class ServerListener implements Runnable {
 
         volatile boolean appRunning = false;
@@ -243,15 +225,6 @@ public class ChatGuiClient extends Application {
                 out = new ObjectOutputStream(socket.getOutputStream());
 
                 appRunning = true;
-                //Ask the gui to show the username dialog and update username
-                //Send to the server
-                Platform.runLater(() -> {
-                    try {
-                        out.(getName());
-                    } catch (IOException e){
-                        e.printStackTrace();
-                    }
-                });
 
                 //handle all kinds of incoming messages
                 String incoming = "";
