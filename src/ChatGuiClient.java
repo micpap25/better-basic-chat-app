@@ -128,11 +128,8 @@ public class ChatGuiClient extends Application {
 
 
         socket = new Socket(serverInfo.serverAddress, serverInfo.serverPort);
-        System.out.println("set up socket");
         out = new ObjectOutputStream(socket.getOutputStream());
-        System.out.println("set up output");
         in = new ObjectInputStream(socket.getInputStream());
-        System.out.println("set up input");
 
         ServerListener socketListener = new ServerListener(in, naming);
 
@@ -429,7 +426,7 @@ public class ChatGuiClient extends Application {
             String[] temp = tempMsg.split(" ");
             ArrayList<String> names = new ArrayList<>();
             int i;
-            for (i = 0; i < temp.length ; i++) {
+            for (i = 0; i < temp.length; i++) {
                 if(temp[i].startsWith("@")){
                     names.add(temp[i].substring("@".length()).trim());
                 }
