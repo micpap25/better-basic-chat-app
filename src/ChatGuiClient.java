@@ -1,30 +1,25 @@
-import java.io.*;
-import java.net.Socket;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
-
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
-import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.*;
 import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.stage.Stage;
+
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * For Java 8, javafx is installed with the JRE. You can run this program normally.
  * For Java 9+, you must install JavaFX separately: https://openjfx.io/openjfx-docs/
@@ -140,7 +135,7 @@ public class ChatGuiClient extends Application {
             out.flush();
             socketListener.appRunning = false;
                 socket.close();
-            } catch (IOException ex) {}
+            } catch (IOException ignored) {}
         });
 
         new Thread(socketListener).start();
@@ -154,9 +149,7 @@ public class ChatGuiClient extends Application {
         try {
             ChatMessage msg = parse(message);
             if(!message.startsWith("/")) {
-                Platform.runLater(() -> {
-                    messageArea.appendText(username + ": "+message + "\n");
-                });
+                Platform.runLater(() -> messageArea.appendText(username + ": "+message + "\n"));
             }
             out.writeObject(msg);
             out.flush();
@@ -201,9 +194,8 @@ public class ChatGuiClient extends Application {
         connectButton.setDisable(true);
 
         // Do some validation (using the Java 8 lambda syntax).
-        ipAddress.textProperty().addListener((observable, oldValue, newValue) -> {
-            connectButton.setDisable(newValue.trim().isEmpty());
-        });
+        ipAddress.textProperty().addListener((observable, oldValue, newValue) ->
+                connectButton.setDisable(newValue.trim().isEmpty()));
 
         port.textProperty().addListener((observable, oldValue, newValue) -> {
             // Only allow numeric values
@@ -216,7 +208,7 @@ public class ChatGuiClient extends Application {
         getServerDialog.getDialogPane().setContent(grid);
 
         // Request focus on the username field by default.
-        Platform.runLater(() -> ipAddress.requestFocus());
+        Platform.runLater(ipAddress::requestFocus);
 
 
         // Convert the result to a ServerInfo object when the login button is clicked.
@@ -263,9 +255,9 @@ public class ChatGuiClient extends Application {
                             body[i]=body[i].strip();
                         }
                     }
-        
+
                     assert body != null;
-    
+
                     switch (info) {
                         case "SUBMITNAME":
                             msg = "Please choose a valid username";
@@ -274,9 +266,7 @@ public class ChatGuiClient extends Application {
                             msg = "Username set as: " + body[0];
                             username = body[0];
                             naming.set(false);
-                            Platform.runLater(() -> {
-                                stage.setTitle("Chatter - " + username);
-                            });
+                            Platform.runLater(() -> stage.setTitle("Chatter - " + username));
                             break;
                         case "WELCOME":
                             msg = body[0] + " has joined";
@@ -322,9 +312,8 @@ public class ChatGuiClient extends Application {
 
                                 String finalRoomuser = roomuser;
                                 String finalServeruser = serveruser;
-                                Platform.runLater(() -> {
-                                    messageArea.appendText(String.format("%-30s %-30s\n", finalRoomuser.trim(), finalServeruser.trim()));
-                                });
+                                Platform.runLater(() ->
+                                        messageArea.appendText(String.format("%-30s %-30s\n", finalRoomuser.trim(), finalServeruser.trim())));
                             }
                             break;
                         case ChatServer.JOIN_ROOM:
@@ -336,9 +325,7 @@ public class ChatGuiClient extends Application {
                     }
 
                     String finalMsg = msg;
-                    Platform.runLater(() -> {
-                        messageArea.appendText(finalMsg + "\n");
-                    });
+                    Platform.runLater(() -> messageArea.appendText(finalMsg + "\n"));
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
