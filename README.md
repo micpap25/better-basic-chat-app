@@ -18,6 +18,7 @@ ChatGuiClient:
 Takes the user to a page to type the IP Address and Port number
 Prompts the user to type a valid username, then welcomes and allows the user to send messages
 Displays an updated version of who is in the server
+Special feature (rooms):
 /list: lists all room names
 /join *: puts the client in room *.
 /leave: removes the client from room *.
