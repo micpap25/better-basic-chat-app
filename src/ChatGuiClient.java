@@ -65,6 +65,7 @@ public class ChatGuiClient extends Application {
     private Socket socket;
     private ObjectInputStream in;
     private ObjectOutputStream out;
+    private AtomicBoolean naming = new AtomicBoolean(true);
 
     private Stage stage;
     private TextArea messageArea;
@@ -108,10 +109,10 @@ public class ChatGuiClient extends Application {
 
         //At first, can't send messages - wait for WELCOME!
         textInput = new TextField();
-        textInput.setEditable(false);
+        textInput.setEditable(true);
         textInput.setOnAction(e -> sendMessage());
         sendButton = new Button("Send");
-        sendButton.setDisable(true);
+        sendButton.setDisable(false);
         sendButton.setOnAction(e -> sendMessage());
 
         HBox hbox = new HBox();
@@ -124,7 +125,7 @@ public class ChatGuiClient extends Application {
         stage.setScene(scene);
         stage.show();
 
-        ServerListener socketListener = new ServerListener(in, );
+        ServerListener socketListener = new ServerListener(in, naming);
 
         //Handle GUI closed event
         stage.setOnCloseRequest(e -> {
@@ -219,12 +220,10 @@ public class ChatGuiClient extends Application {
 
         ObjectInputStream socketIn;
         AtomicBoolean naming;
-        Consumer<String> l;
         public volatile boolean appRunning = true;
-        public ServerListener(ObjectInputStream socketIn, AtomicBoolean naming, Consumer<String> l) {
+        public ServerListener(ObjectInputStream socketIn, AtomicBoolean naming) {
             this.naming = naming;
             this.socketIn = socketIn;
-            this.l = l;
         }
 
         private String slice(String[] array, int start, int end, String insert){
@@ -256,14 +255,14 @@ public class ChatGuiClient extends Application {
     
                     switch (info) {
                         case "SUBMITNAME":
-                        Platform.runLater(() -> {
-                            
-                        });
                             msg = "Please choose a valid username";
                             break;
                         case "ACCEPT":
-                            msg = "Username set as: "+ body[0];
+                            msg = "Username set as: " + body[0];
                             naming.set(false);
+                            Platform.runLater(() -> {
+                                stage.setTitle("Chatter - " + username);
+                            });
                             break;
                         case "WELCOME":
                             msg = body[0] + " has joined";
@@ -314,8 +313,11 @@ public class ChatGuiClient extends Application {
                             msg = body[0] + " has left the room";
                             break;
                     }
-    
-                    l.accept(msg);
+
+                    String finalMsg = msg;
+                    Platform.runLater(() -> {
+                        messageArea.appendText(finalMsg + "\n");
+                    });
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();

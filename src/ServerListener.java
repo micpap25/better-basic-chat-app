@@ -47,7 +47,7 @@ public class ServerListener implements Runnable {
                         msg = "Please choose a valid username";
                         break;
                     case "ACCEPT":
-                        msg = "Username set as: "+ body[0];
+                        msg = "Username set as: " + body[0];
                         naming.set(false);
                         break;
                     case "WELCOME":
