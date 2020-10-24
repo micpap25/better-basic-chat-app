@@ -128,11 +128,8 @@ public class ChatGuiClient extends Application {
 
 
         socket = new Socket(serverInfo.serverAddress, serverInfo.serverPort);
-        System.out.println("set up socket");
         out = new ObjectOutputStream(socket.getOutputStream());
-        System.out.println("set up output");
         in = new ObjectInputStream(socket.getInputStream());
-        System.out.println("set up input");
 
         ServerListener socketListener = new ServerListener(in, naming);
 
@@ -156,6 +153,11 @@ public class ChatGuiClient extends Application {
         textInput.clear();
         try {
             ChatMessage msg = parse(message);
+            if(!message.startsWith("/")) {
+                Platform.runLater(() -> {
+                    messageArea.appendText(username + ": "+message + "\n");
+                });
+            }
             out.writeObject(msg);
             out.flush();
         } catch (IOException e){
@@ -253,7 +255,6 @@ public class ChatGuiClient extends Application {
                 ChatMessage incoming;
                 while((incoming = (ChatMessage) socketIn.readObject()) != null) {
                     String msg = "";
-                    //System.out.println(incoming);
                     String info = incoming.getMsgHeader();
                     String[] body = null;
                     if(incoming.getMessage()!=null){
@@ -305,8 +306,10 @@ public class ChatGuiClient extends Application {
                             if(roster.length>1) {
                                 server = roster[1].split(" ");
                             }
-                            System.out.println("---------Roster---------");
-                            System.out.printf("%-30s %-30s\n","ROOM",roster.length>1?"SERVER":"");
+                            Platform.runLater(() -> {
+                                messageArea.appendText("---------Roster---------\n");
+                                messageArea.appendText(String.format("%-30s %-30s\n","ROOM",roster.length>1?"SERVER":""));
+                            });
                             for (int i = 0; i < server.length || i <room.length ; i++) {
                                 String serveruser ="";
                                 String roomuser ="";
@@ -316,7 +319,12 @@ public class ChatGuiClient extends Application {
                                 if(i<room.length) {
                                     roomuser = room[i];
                                 }
-                                System.out.printf("%-30s %-30s\n",roomuser.trim(),serveruser.trim());
+
+                                String finalRoomuser = roomuser;
+                                String finalServeruser = serveruser;
+                                Platform.runLater(() -> {
+                                    messageArea.appendText(String.format("%-30s %-30s\n", finalRoomuser.trim(), finalServeruser.trim()));
+                                });
                             }
                             break;
                         case ChatServer.JOIN_ROOM:
@@ -339,8 +347,6 @@ public class ChatGuiClient extends Application {
                 System.out.println("Client Listener exiting");
             }
         }
-
-
 
         /*public void run() {
             try {
@@ -424,7 +430,7 @@ public class ChatGuiClient extends Application {
             String[] temp = tempMsg.split(" ");
             ArrayList<String> names = new ArrayList<>();
             int i;
-            for (i = 0; i < temp.length ; i++) {
+            for (i = 0; i < temp.length; i++) {
                 if(temp[i].startsWith("@")){
                     names.add(temp[i].substring("@".length()).trim());
                 }
