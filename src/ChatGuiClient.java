@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -131,6 +132,7 @@ public class ChatGuiClient extends Application {
         stage.setOnCloseRequest(e -> {
             try {
             out.writeObject(new ChatMessage(ChatServer.QUIT));
+            out.flush();
             socketListener.appRunning = false;
                 socket.close();
             } catch (IOException ex) {}
@@ -145,7 +147,9 @@ public class ChatGuiClient extends Application {
             return;
         textInput.clear();
         try {
-            out.writeObject(new ChatMessage(ChatServer.CHAT, message));
+            ChatMessage msg = parse(message);
+            out.writeObject(msg);
+            out.flush();
         } catch (IOException e){
             e.printStackTrace();
         }
@@ -327,6 +331,8 @@ public class ChatGuiClient extends Application {
             }
         }
 
+
+
         /*public void run() {
             try {
                 // Set up the socket for the Gui
@@ -389,5 +395,56 @@ public class ChatGuiClient extends Application {
                 }
             }
         } */
+    }
+
+
+    public ChatMessage parse(String msg){
+        String tempMsg = msg.toLowerCase();
+
+        if(msg.length() == 0){
+            return null;
+        }
+
+        if (naming.get() || tempMsg.startsWith("/name")) {
+            naming.set(true);
+            msg = msg.replace("/name","").trim();
+            return new ChatMessage(ChatServer.NAME, msg);
+        }
+
+        if (tempMsg.charAt(0)=='@') {
+            String[] temp = tempMsg.split(" ");
+            ArrayList<String> names = new ArrayList<>();
+            int i;
+            for (i = 0; i < temp.length ; i++) {
+                if(temp[i].startsWith("@")){
+                    names.add(temp[i].substring("@".length()).trim());
+                }
+                else{
+                    break;
+                }
+            }
+            StringBuilder newmsg = new StringBuilder();
+            for (; i < temp.length ; i++) {
+                newmsg.append(temp[i]);
+                newmsg.append(" ");
+            }
+
+            return new ChatMessage(ChatServer.PCHAT,newmsg.toString().trim(),names);
+        }
+        else if (tempMsg.startsWith("/list")) {
+            return new ChatMessage(ChatServer.LIST);
+        }
+        else if(tempMsg.startsWith("/join")) {
+            return new ChatMessage(ChatServer.JOIN_ROOM, msg.substring("/join".length()).trim());
+        }
+        else if (tempMsg.startsWith("/leave")) {
+            return new ChatMessage(ChatServer.LEAVE_ROOM);
+        }
+        else if(tempMsg.startsWith("/whoishere")){
+            return new ChatMessage(ChatServer.ROSTER);
+        }
+        else {
+            return new ChatMessage(ChatServer.CHAT, msg.trim());
+        }
     }
 }
