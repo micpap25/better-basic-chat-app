@@ -63,9 +63,9 @@ class ServerInfo {
 }
 
 public class ChatGuiClient extends Application {
-    private Socket socket;
-    private ObjectInputStream in;
-    private ObjectOutputStream out;
+    private static Socket socket;
+    private static ObjectInputStream in;
+    private static ObjectOutputStream out;
     private AtomicBoolean naming = new AtomicBoolean(true);
 
     private Stage stage;
@@ -125,6 +125,14 @@ public class ChatGuiClient extends Application {
         stage.setTitle("Chat Client");
         stage.setScene(scene);
         stage.show();
+
+
+        socket = new Socket(serverInfo.serverAddress, serverInfo.serverPort);
+        System.out.println("set up socket");
+        out = new ObjectOutputStream(socket.getOutputStream());
+        System.out.println("set up output");
+        in = new ObjectInputStream(socket.getInputStream());
+        System.out.println("set up input");
 
         ServerListener socketListener = new ServerListener(in, naming);
 
