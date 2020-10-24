@@ -34,7 +34,7 @@ public class ChatClient {
         while (!line.toLowerCase().startsWith("/quit")) {
             line = userInput.nextLine().trim();
             ChatMessage msg = parse(line);
-            if(msg==null){
+            if(msg == null){
                 continue;
             }
             out.writeObject(msg);
