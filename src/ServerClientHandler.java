@@ -58,7 +58,7 @@ public class ServerClientHandler implements Runnable {
                     client.getOut().flush();
                 }
             }
-            sendRoster(false,false,true,false);
+            sendRoster();
         } catch (Exception ex) {
             System.out.println("join_room caught exception: " + ex);
             ex.printStackTrace();
@@ -79,7 +79,6 @@ public class ServerClientHandler implements Runnable {
                     client.getOut().flush();
                 }
             }
-            sendRoster(false,false,false,true);
             client.setRoom("");
         } catch (Exception ex) {
             System.out.println("leave_room caught exception: " + ex);
@@ -169,18 +168,14 @@ public class ServerClientHandler implements Runnable {
             } catch (IOException ignored){}
         }
     }
-    private void sendRoster(boolean asked, boolean global,boolean privatesend,boolean leaving){
+    private void sendRoster(){
         ChatMessage obj;
         StringBuilder s = new StringBuilder();
         StringBuilder k = new StringBuilder();
         k.append("/");
 
         for (ClientConnectionData c : clientList) {
-            if(leaving && c.getUserName().equals(client.getUserName())){
-                k.append(c.getUserName());
-                k.append(" ");
-            }
-            else if (c.getRoom().equals(client.getRoom())) {
+            if (c.getRoom().equals(client.getRoom())) {
                 s.append(c.getUserName());
                 s.append(" ");
             }
@@ -192,16 +187,11 @@ public class ServerClientHandler implements Runnable {
         s.append(k);
 
         obj = new ChatMessage(ChatServer.ROSTER, s.toString());
-        if(!asked) {
-            broadcast(obj, global);
-        }
-        if(privatesend){
-            try{
-               client.getOut().writeObject(obj);
-               client.getOut().flush();
-            }catch (IOException ex){
-                System.out.println("failed to send roster");
-            }
+        try{
+           client.getOut().writeObject(obj);
+           client.getOut().flush();
+        }catch (IOException ex){
+            System.out.println("failed to send roster");
         }
     }
     @Override
@@ -211,7 +201,7 @@ public class ServerClientHandler implements Runnable {
             naming(null);
             //notify all that client has joined
             broadcast(new ChatMessage(ChatServer.WELCOME, client.getUserName()),true);
-            sendRoster(false,true,true,false);
+            sendRoster();
             ChatMessage incoming;
             active:
             while( (incoming = (ChatMessage) in.readObject()) != null) {
@@ -242,7 +232,7 @@ public class ServerClientHandler implements Runnable {
                         naming(clientMsg);
                         break;
                     case ChatServer.ROSTER:
-                        sendRoster(true,false,true,false);
+                        sendRoster();
                         break;
                     case ChatServer.JOIN_ROOM:
                         leaveRoom();
@@ -274,7 +264,6 @@ public class ServerClientHandler implements Runnable {
             }
             System.out.println(client.getName() + " has left.");
             broadcast(new ChatMessage(ChatServer.QUIT, client.getUserName()),true);
-            sendRoster(false,true,false,true);
             try {
                 client.getSocket().close();
             } catch (IOException ignored) {}
