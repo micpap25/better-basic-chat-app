@@ -136,7 +136,7 @@ public class ChatGuiClient extends Application {
         rosterButton.setDisable(true);
         rosterButton.setOnAction(e -> commands(ChatServer.ROSTER));
 
-        leaveButton = new Button("leave");
+        leaveButton = new Button("leave room");
         leaveButton.setDisable(true);
         leaveButton.setOnAction(e -> commands(ChatServer.LEAVE_ROOM));
 
