@@ -51,7 +51,7 @@ public class ServerListener implements Runnable {
                         naming.set(false);
                         break;
                     case "WELCOME":
-                        msg = body[0] + " has joined";
+                        msg = body[0] + " has joined the server";
                         break;
                     case ChatServer.CHAT:
                         msg = body[0] + ": " + slice(body,1,body.length," ");
