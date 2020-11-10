@@ -71,6 +71,7 @@ public class ChatGuiClient extends Application {
     private Button sendButton;
     private Button listButton;
     private Button joinButton;
+    private Button rosterButton;
 
     private Button leaveButton;
 
@@ -131,12 +132,16 @@ public class ChatGuiClient extends Application {
         listButton.setDisable(true);
         listButton.setOnAction(e -> commands(ChatServer.LIST));
 
+        rosterButton = new Button("roster");
+        rosterButton.setDisable(true);
+        rosterButton.setOnAction(e -> commands(ChatServer.ROSTER));
+
         leaveButton = new Button("leave");
         leaveButton.setDisable(true);
         leaveButton.setOnAction(e -> commands(ChatServer.LEAVE_ROOM));
 
         HBox boundingbox = new HBox();
-        boundingbox.getChildren().addAll(new Label("Commands: "),listButton,roomInput,joinButton,leaveButton);
+        boundingbox.getChildren().addAll(new Label("Commands: "),listButton,roomInput,joinButton,leaveButton,rosterButton);
         HBox.setHgrow(roomInput,Priority.ALWAYS);
         borderPane.setTop(boundingbox);
 
@@ -317,6 +322,7 @@ public class ChatGuiClient extends Application {
                             roomInput.setEditable(true);
                             joinButton.setDisable(false);
                             leaveButton.setDisable(false);
+                            rosterButton.setDisable(false);
                             break;
                         case "WELCOME":
                             msg = body[0] + " has joined";
