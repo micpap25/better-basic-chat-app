@@ -1,6 +1,7 @@
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -66,7 +67,12 @@ public class ChatGuiClient extends Application {
     private Stage stage;
     private TextArea messageArea;
     private TextField textInput;
+    private TextField roomInput;
     private Button sendButton;
+    private Button listButton;
+    private Button joinButton;
+
+    private Button leaveButton;
 
     private ServerInfo serverInfo;
     //volatile keyword makes individual reads/writes of the variable atomic
@@ -111,6 +117,30 @@ public class ChatGuiClient extends Application {
         sendButton.setDisable(false);
         sendButton.setOnAction(e -> sendMessage());
 
+
+        roomInput = new TextField();
+        roomInput.setEditable(false);
+        roomInput.setDisable(true);
+        roomInput.setOnAction(e -> commands(ChatServer.JOIN_ROOM));
+        joinButton = new Button("Join");
+        joinButton.setDisable(true);
+        joinButton.setOnAction(e -> commands(ChatServer.JOIN_ROOM));
+
+
+        listButton = new Button("list");
+        listButton.setDisable(true);
+        listButton.setOnAction(e -> commands(ChatServer.LIST));
+
+        leaveButton = new Button("leave");
+        leaveButton.setDisable(true);
+        leaveButton.setOnAction(e -> commands(ChatServer.LEAVE_ROOM));
+
+        HBox boundingbox = new HBox();
+        boundingbox.getChildren().addAll(new Label("Commands: "),listButton,roomInput,joinButton,leaveButton);
+        HBox.setHgrow(roomInput,Priority.ALWAYS);
+        borderPane.setTop(boundingbox);
+
+
         HBox hbox = new HBox();
         hbox.getChildren().addAll(new Label("Message: "), textInput, sendButton);
         HBox.setHgrow(textInput, Priority.ALWAYS);
@@ -140,7 +170,21 @@ public class ChatGuiClient extends Application {
 
         new Thread(socketListener).start();
     }
-
+    private void commands(String type) {
+        try {
+            ChatMessage msg;
+            if(type.equals(ChatServer.JOIN_ROOM)){
+                msg = new ChatMessage(type,roomInput.getText().trim());
+            }
+            else {
+                msg = new ChatMessage(type);
+            }
+            out.writeObject(msg);
+            out.flush();
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+    }
     private void sendMessage() {
         String message = textInput.getText().trim();
         if (message.length() == 0)
@@ -267,6 +311,12 @@ public class ChatGuiClient extends Application {
                             username = body[0];
                             naming.set(false);
                             Platform.runLater(() -> stage.setTitle("Chatter - " + username));
+
+                            roomInput.setDisable(false);
+                            listButton.setDisable(false);
+                            roomInput.setEditable(true);
+                            joinButton.setDisable(false);
+                            leaveButton.setDisable(false);
                             break;
                         case "WELCOME":
                             msg = body[0] + " has joined";
@@ -283,7 +333,7 @@ public class ChatGuiClient extends Application {
                         case ChatServer.LIST:
                             StringBuilder k = new StringBuilder("\n------ACTIVE ROOMS------");
                             k.append("\n");
-                            for (int i = 1; i < body.length ; i++) {
+                            for (int i = 0; i < body.length ; i++) {
                                 k.append(body[i]);
                                 k.append("\n");
                             }

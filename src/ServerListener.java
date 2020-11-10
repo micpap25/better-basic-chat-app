@@ -65,7 +65,7 @@ public class ServerListener implements Runnable {
                     case ChatServer.LIST:
                         StringBuilder k = new StringBuilder("\n------ACTIVE ROOMS------");
                         k.append("\n");
-                        for (int i = 1; i < body.length ; i++) {
+                        for (int i = 0; i < body.length ; i++) {
                             k.append(body[i]);
                             k.append("\n");
                         }
