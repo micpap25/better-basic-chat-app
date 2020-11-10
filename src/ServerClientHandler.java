@@ -139,7 +139,7 @@ public class ServerClientHandler implements Runnable {
                 } else {
                     synchronized (clientList) {
                         for (ClientConnectionData c : clientList) {
-                            if (c.getUserName() != null && c.getUserName().equals(userName)) {
+                            if (c.getUserName() != null && c.getUserName().toLowerCase().equals(userName.toLowerCase())) {
                                 nameValidity = false;
                                 break;
                             }
@@ -221,7 +221,7 @@ public class ServerClientHandler implements Runnable {
                         ChatMessage msg = new ChatMessage(ChatServer.PCHAT, String.format("%s %s", client.getUserName(), clientMsg));
                         ArrayList<ClientConnectionData> recipients = new ArrayList<>();
                         for (ClientConnectionData c : clientList) {
-                            if (incoming.getRecipients().contains(c.getUserName())) {
+                            if (incoming.getRecipients().contains(c.getUserName().toLowerCase())) {
                                 recipients.add(c);
                             }
                         }
